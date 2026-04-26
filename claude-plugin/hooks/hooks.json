@@ -1,0 +1,8 @@
+{
+  "hooks": [
+    {
+      "event": "SessionStart",
+      "command": "curl -sf http://localhost:23119/zotero-bridge/rpc -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"system.ping\",\"params\":{},\"id\":1}' > /dev/null 2>&1 || echo '⚠️  Zotero Bridge not detected. Start Zotero with zotero-bridge.xpi installed.'"
+    }
+  ]
+}

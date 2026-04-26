@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "outDir": ".scaffold/build",
+    "skipLibCheck": true,
+    "lib": ["ES2022"],
+    "types": ["zotero-types"]
+  },
+  "include": ["src/**/*.ts", "typings/**/*.d.ts"]
+}

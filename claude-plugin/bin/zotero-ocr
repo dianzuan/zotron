@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Zotero OCR — cloud OCR for Zotero collections
+# Usage: zotero-ocr --collection "数字经济"
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PYTHON_DIR="$(cd "$SCRIPT_DIR/../../python" && pwd)"
+cd "$PYTHON_DIR" && exec uv run zotero-ocr "$@"
