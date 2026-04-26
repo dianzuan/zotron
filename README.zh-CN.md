@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/logo-256.png" alt="Zotero Bridge logo" width="160" />
+
 # Zotero Bridge
 
 **Zotero 8 的强类型 JSON-RPC 2.0 桥**

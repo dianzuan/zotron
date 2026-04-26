@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/logo-256.png" alt="Zotero Bridge logo" width="160" />
+
 # Zotero Bridge
 
 **Typed JSON-RPC 2.0 bridge for Zotero 8**

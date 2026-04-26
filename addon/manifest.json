@@ -7,7 +7,7 @@
   "author": "diamondrill",
   "icons": {
     "48": "content/icons/icon.png",
-    "96": "content/icons/icon.png"
+    "96": "content/icons/icon@96.png"
   },
   "applications": {
     "zotero": {
