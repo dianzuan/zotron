@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 # Zotero RAG — semantic search for Zotero collections
-# Usage: zotero-rag search --collection "数字经济" "query"
+# Usage: zotero-rag index --collection "数字经济" | zotero-rag search --collection "..." "query"
 set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PYTHON_DIR="$(cd "$SCRIPT_DIR/../../python" && pwd)"
-cd "$PYTHON_DIR" && exec uv run zotero-rag "$@"
+exec uv run --project "${CLAUDE_PLUGIN_ROOT}/python" zotero-rag "$@"

@@ -27,7 +27,7 @@ The user's diagnosis: the root cause isn't bibliography specifically — it's th
 
 **Out of scope:**
 
-- CLI Python side (`python/zotero_bridge/cli.py`) — already audited 2026-04-23.
+- CLI Python side (`claude-plugin/python/zotero_bridge/cli.py`) — already audited 2026-04-23.
 - Zotero 6/7 back-compat — the XPI targets 6.999+ per manifest; Zotero 8 is the deployment reality. Findings will focus on Zotero 8 correctness.
 - Feature requests (new methods, new commands) — only existing surface.
 

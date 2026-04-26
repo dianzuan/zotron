@@ -76,34 +76,51 @@ Zotero Bridge 填补了这个空白：**一个稳定、强类型、统一的 API
 
 ## 快速上手
 
-### 1. 装 Zotero 插件（所有人都得做这一步）
+### 路径 A —— Claude Code（推荐）
 
-1. 从 [Releases](https://github.com/dianzuan/zotero-bridge/releases) 下载最新 `zotero-bridge.xpi`。
-2. Zotero 里：**工具 → 插件 → ⚙ → 从文件安装插件…** → 选 `.xpi`。
-3. 重启 Zotero。HTTP 服务跑在 `localhost:23119/zotero-bridge/rpc`。
+这条路径的精髓：**先装 plugin，剩下的 Zotero 那一摊由插件里的 `/setup` 命令带你过。** 不用自己去 Releases 翻 .xpi。
 
-### 2. 选一个客户端
+**前置依赖：** [Claude Code](https://docs.claude.com/en/docs/claude-code/)、[`uv`](https://docs.astral.sh/uv/getting-started/installation/)（一行装）、Zotero 8 桌面版。
 
-#### A. Claude Code（推荐）
-
-仓库自带 1 个 umbrella skill（5 个工作流，渐进披露），让 Claude 直接帮你搜库、入库、导出引用、OCR、做 RAG。
-
-在 Claude Code 里：
+**第 1 步 —— 装 Claude Code 插件。** 任意 Claude Code 会话里：
 
 ```
 /plugin marketplace add dianzuan/zotero-bridge
 /plugin install zotero-bridge@zotero-bridge
 ```
 
-然后直接对 Claude 说："找一下我库里关于注意力机制的论文" 或 "把 DOI 10.1038/nature12373 加到 ML 集合里" —— Claude 自动路由到对应工作流，工作流调 RPC。
+这一步会捎带：`zotero` umbrella skill、`zotero-bridge` / `zotero-rag` / `zotero-ocr` 三个 CLI（通过 `uv` 自动跑插件内打包好的 Python 源码）、`/setup` 斜杠命令。
 
-（本地开发：clone 仓库后 `/plugin marketplace add ~/zotero-bridge`。）
+**第 2 步 —— 把 Zotero 这边接通。**
 
-#### B. Python CLI / SDK（写脚本或别的 AI agent）
+```
+/setup
+```
+
+`/setup` 会先 ping 一下 bridge；连不上 `localhost:23119/zotero-bridge/rpc` 时，它会从 GitHub releases API 拿到最新 `zotero-bridge.xpi`、下载到本地，然后带你走 **Zotero → 工具 → 插件 → ⚙ → 从文件安装** → 重启。你确认后会再 ping 一次验证。
+
+**第 3 步 —— 直接用。** 跟 Claude 自然语言说话即可：
+
+> *"找一下我库里关于注意力机制的论文"*
+> *"把 DOI 10.1038/nature12373 加到 ML 集合里"*
+> *"把 10、13、16 号条目按 GB/T 7714 格式导出"*
+
+Claude 自动路由到对应子工作流（search / manage / export / OCR / RAG），子工作流调 RPC。
+
+> 本地开发变体：clone 仓库后 `/plugin marketplace add ~/zotero-bridge`，`/setup` 流程一样。
+
+### 路径 B —— Python CLI / SDK（不用 Claude Code）
+
+写脚本、对接其它 AI agent，或者只想要一个强类型 RPC 客户端。和路径 A 互斥。
 
 ```bash
-uv tool install zotero-bridge        # 或：pip install zotero-bridge
+# 1) 手动装 XPI（工具 → 插件 → ⚙ → 从文件安装）
+#    下载地址：https://github.com/dianzuan/zotero-bridge/releases/latest
 
+# 2) 从 git 装 Python CLI（暂未发布到 PyPI）
+uv tool install "git+https://github.com/dianzuan/zotero-bridge.git#subdirectory=claude-plugin/python"
+
+# 3) 用起来
 zotero-bridge ping
 zotero-bridge search quick "数字经济" --limit 10
 zotero-bridge rpc items.get '{"id":12345}'    # escape hatch —— 覆盖全部 77 个方法
@@ -111,13 +128,23 @@ zotero-bridge rpc items.get '{"id":12345}'    # escape hatch —— 覆盖全部
 
 `rpc` 子命令是协议层 escape hatch：任何没有友好 typer 子命令的 RPC 方法都能直接调用。`--jq` 过滤输出（仿 `gh api --jq`），`--install-completion {bash|zsh|fish|powershell}` 装 shell 补全。SDK 稳定契约见 [`docs/api-stability.md`](docs/api-stability.md)。
 
-#### C. 裸 HTTP（任何工具、任何语言）
+### 路径 C —— 裸 HTTP（任何语言）
 
 ```bash
 curl -s -X POST http://localhost:23119/zotero-bridge/rpc \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","method":"system.ping","id":1}'
 ```
+
+### 故障排查
+
+| 现象 | 原因 | 修法 |
+|---|---|---|
+| `/setup` 输出 `MISSING_UV` | 没装 `uv` | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| 启动横幅提示 *"Zotero Bridge not detected"* | Zotero 没开，或 XPI 没装 | 启动 Zotero，再跑 `/setup` |
+| 23119 端口 `connection refused` | Zotero 自带 HTTP 服务被关 | 编辑 → 设置 → 高级 → 配置编辑器 → `extensions.zotero.httpServer.enabled` 设为 `true` |
+| 装完 skill 不自动触发 | 插件没在当前会话加载 | `/reload-plugins`，或重启 Claude Code |
+| Bash 里 `zotero-bridge: command not found` | 插件的 `bin/` 没进 PATH | 插件必须 enabled —— 在 `/plugin` 的 **Installed** 标签确认 |
 
 ## API 一览
 
@@ -203,7 +230,7 @@ addon/
 
 ## 带引用的 RAG（"让 AI 像人一样读 PDF"接口）
 
-Zotero Bridge 的 RAG 层（`python/zotero_bridge/rag/`）让 AI 从用户的
+Zotero Bridge 的 RAG 层（`claude-plugin/python/zotero_bridge/rag/`）让 AI 从用户的
 Zotero 库里取文本时**带上结构化出处**。每个片段都封装成 `Citation`
 对象，带 Zotero item key、附件 ID、章节、chunk 索引、相似度分数、
 原文，以及一个 `zotero://` URI 用于一键回到 Zotero 验证。

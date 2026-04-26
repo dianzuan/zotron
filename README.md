@@ -76,34 +76,51 @@ Zotero Bridge fills that gap with a **single, stable, typed API surface** that a
 
 ## Quick start
 
-### 1. Install the Zotero plugin (everyone does this)
+### Path A — Claude Code (recommended)
 
-1. Download the latest `zotero-bridge.xpi` from [Releases](https://github.com/dianzuan/zotero-bridge/releases).
-2. In Zotero: **Tools → Plugins → ⚙ → Install Add-on From File…** → pick the `.xpi`.
-3. Restart Zotero. The HTTP server is live on `localhost:23119/zotero-bridge/rpc`.
+The point of this path: **install the plugin first; the plugin then walks you through the Zotero side via `/setup`.** No manual XPI hunting.
 
-### 2. Pick a client
+**Prerequisites:** [Claude Code](https://docs.claude.com/en/docs/claude-code/), [`uv`](https://docs.astral.sh/uv/getting-started/installation/) (one-line installer), Zotero 8 desktop.
 
-#### A. Claude Code (recommended)
-
-The repo ships 1 umbrella skill (5 workflows via progressive disclosure) so Claude can search, add, export, OCR, and RAG over your library directly.
-
-In Claude Code:
+**Step 1 — install the Claude Code plugin.** In any Claude Code session:
 
 ```
 /plugin marketplace add dianzuan/zotero-bridge
 /plugin install zotero-bridge@zotero-bridge
 ```
 
-Now ask Claude things like *"find papers I have on transformer attention"* or *"add DOI 10.1038/nature12373 to my ML collection"* — it routes to the right workflow, which calls the RPC.
+This bundles the `zotero` umbrella skill, the `zotero-bridge` / `zotero-rag` / `zotero-ocr` CLIs (auto-resolved via `uv` from the plugin's bundled Python source), and a `/setup` slash command.
 
-(Or for local dev: clone the repo and `/plugin marketplace add ~/zotero-bridge`.)
+**Step 2 — bootstrap the Zotero XPI.**
 
-#### B. Python CLI / SDK (scripts and other AI agents)
+```
+/setup
+```
+
+`/setup` pings the bridge, and if it can't reach `localhost:23119/zotero-bridge/rpc`, it fetches the latest `zotero-bridge.xpi` from the GitHub releases API, downloads it, and walks you through **Zotero → Tools → Plugins → ⚙ → Install From File → restart**. After you confirm, it re-pings to verify.
+
+**Step 3 — try it.** Just talk to Claude:
+
+> *"find papers in my library about transformer attention"*
+> *"add DOI 10.1038/nature12373 to my ML collection"*
+> *"export GB/T 7714 references for items 10, 13, 16"*
+
+Claude auto-routes to the right sub-workflow (search / manage / export / OCR / RAG), which calls the RPC.
+
+> Local-dev variant: clone the repo and `/plugin marketplace add ~/zotero-bridge`. Same `/setup` flow.
+
+### Path B — Python CLI / SDK (no Claude Code)
+
+For scripts, other AI agents, or anything that just wants the typed RPC client. Skip Path A entirely.
 
 ```bash
-uv tool install zotero-bridge        # or: pip install zotero-bridge
+# 1) Install the XPI manually (Tools → Plugins → ⚙ → Install From File)
+#    Download: https://github.com/dianzuan/zotero-bridge/releases/latest
 
+# 2) Install the Python CLI from git (not yet on PyPI)
+uv tool install "git+https://github.com/dianzuan/zotero-bridge.git#subdirectory=claude-plugin/python"
+
+# 3) Use it
 zotero-bridge ping
 zotero-bridge search quick "transformer attention" --limit 10
 zotero-bridge rpc items.get '{"id":12345}'    # escape hatch — covers all 77 methods
@@ -111,13 +128,23 @@ zotero-bridge rpc items.get '{"id":12345}'    # escape hatch — covers all 77 m
 
 The `rpc` subcommand is the protocol-level escape hatch: any RPC method that doesn't have a friendly typer subcommand can still be called directly. `--jq` filters output (`gh api --jq` style), `--install-completion {bash|zsh|fish|powershell}` enables shell completion. See [`docs/api-stability.md`](docs/api-stability.md) for the SDK contract.
 
-#### C. Raw HTTP (any tool, any language)
+### Path C — Raw HTTP (any language)
 
 ```bash
 curl -s -X POST http://localhost:23119/zotero-bridge/rpc \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","method":"system.ping","id":1}'
 ```
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `/setup` says `MISSING_UV` | `uv` not on PATH | Install: `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| Skill startup banner: *"Zotero Bridge not detected"* | Zotero not running or XPI not installed | Start Zotero, then re-run `/setup` |
+| `connection refused` on port 23119 | Zotero's built-in HTTP server is off | Zotero → Edit → Settings → Advanced → Config Editor → set `extensions.zotero.httpServer.enabled = true` |
+| Skill doesn't auto-trigger after install | Plugin not loaded into the session | `/reload-plugins`, or restart Claude Code |
+| `zotero-bridge: command not found` from Bash tool | Plugin's `bin/` not on PATH | Plugin must be enabled — check the **Installed** tab in `/plugin` |
 
 ## API surface
 
@@ -203,7 +230,7 @@ addon/
 
 ## RAG with Citations (the "AI reads PDFs like a human" surface)
 
-Zotero Bridge's RAG layer (`python/zotero_bridge/rag/`) lets AI agents
+Zotero Bridge's RAG layer (`claude-plugin/python/zotero_bridge/rag/`) lets AI agents
 retrieve text from a user's Zotero library **with structured provenance**.
 Every chunk comes back as a `Citation` object carrying the Zotero item
 key, attachment id, section heading, chunk index, similarity score, the

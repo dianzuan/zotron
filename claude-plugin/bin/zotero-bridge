@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Zotero Bridge CLI — typed RPC client for the Zotero Bridge XPI
+# Usage: zotero-bridge ping | zotero-bridge search quick "..." | zotero-bridge rpc <method> '<json>'
+set -euo pipefail
+exec uv run --project "${CLAUDE_PLUGIN_ROOT}/python" zotero-bridge "$@"
