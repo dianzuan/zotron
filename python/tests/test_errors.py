@@ -1,5 +1,4 @@
 """Tests for zotero_bridge.errors."""
-import pytest
 from zotero_bridge.errors import (
     ZoteroBridgeError,
     ZoteroUnavailable,

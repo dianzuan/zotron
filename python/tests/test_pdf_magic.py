@@ -1,5 +1,4 @@
 """Tests for zotero_bridge.push.check_pdf_magic."""
-import pytest
 from pathlib import Path
 from zotero_bridge.push import check_pdf_magic
 

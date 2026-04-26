@@ -4,9 +4,8 @@ import json
 import os
 from unittest.mock import MagicMock, patch
 
-import pytest
 
-from zotero_bridge.config import DEFAULTS, _load_from_zotero, load_config
+from zotero_bridge.config import DEFAULTS, load_config
 
 
 # ---------------------------------------------------------------------------

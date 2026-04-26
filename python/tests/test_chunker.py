@@ -1,6 +1,5 @@
 """Tests for section-aware text chunker."""
 
-import pytest
 from zotero_bridge.rag.chunker import chunk_text
 
 

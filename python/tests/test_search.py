@@ -1,4 +1,3 @@
-import pytest
 from zotero_bridge.rag.search import VectorStore
 
 
