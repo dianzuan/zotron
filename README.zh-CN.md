@@ -2,13 +2,13 @@
 
 # Zotero Bridge
 
-**Zotero 7/8 的强类型 JSON-RPC 2.0 桥**
+**Zotero 8 的强类型 JSON-RPC 2.0 桥**
 
 *把 Zotero 内部 77 个 API 方法通过 HTTP 暴露给 AI 智能体、命令行和外部工具。*
 
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![CI](https://github.com/dianzuan/zotero-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/dianzuan/zotero-bridge/actions/workflows/ci.yml)
-[![Zotero](https://img.shields.io/badge/Zotero-7%20%7C%208-orange)](https://www.zotero.org/)
+[![Zotero](https://img.shields.io/badge/Zotero-8.0+-orange)](https://www.zotero.org/)
 [![GitHub release](https://img.shields.io/github/v/release/dianzuan/zotero-bridge?color=brightgreen)](https://github.com/dianzuan/zotero-bridge/releases/latest)
 
 [**English**](README.md) · [**简体中文**](README.zh-CN.md)
@@ -22,7 +22,7 @@
 - **77 个强类型 RPC 方法**,9 大命名空间 —— items / collections / attachments / notes / search / tags / export / settings / system
 - **Python CLI + SDK** —— 基于 typer,支持 `--jq` 过滤、`--paginate` 自动翻页、`--dry-run` 预演、`--output {json,table}`、shell 补全
 - **带溯源的 RAG** —— 每段引用都带 `zotero://` URI,一键回到 Zotero 原文核对
-- **跨版本支持** —— Zotero 7 / 8 / 9
+- **在 Zotero 8.0.4 实测** —— Zotero 7 暂未验证
 - **AGPL-3.0** —— 完全开源
 
 ## 📑 目录
@@ -163,7 +163,7 @@ zotero-bridge collections list --jq '.[] | select(.parentID == null) | .name'
 ### 前置
 
 - Node.js 18+
-- 本地装了 Zotero 7 或 8
+- 本地装了 Zotero 8
 - （可选但推荐）Windows 用户用 WSL 跑开发流程
 
 ### 构建 + 测试

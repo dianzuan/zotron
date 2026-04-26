@@ -2,13 +2,13 @@
 
 # Zotero Bridge
 
-**Typed JSON-RPC 2.0 bridge for Zotero 7/8**
+**Typed JSON-RPC 2.0 bridge for Zotero 8**
 
 *77 internal API methods over HTTP — for AI agents, CLIs, and external tools.*
 
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![CI](https://github.com/dianzuan/zotero-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/dianzuan/zotero-bridge/actions/workflows/ci.yml)
-[![Zotero](https://img.shields.io/badge/Zotero-7%20%7C%208-orange)](https://www.zotero.org/)
+[![Zotero](https://img.shields.io/badge/Zotero-8.0+-orange)](https://www.zotero.org/)
 [![GitHub release](https://img.shields.io/github/v/release/dianzuan/zotero-bridge?color=brightgreen)](https://github.com/dianzuan/zotero-bridge/releases/latest)
 
 [**English**](README.md) · [**简体中文**](README.zh-CN.md)
@@ -22,7 +22,7 @@
 - **77 typed RPC methods** across 9 namespaces — items, collections, attachments, notes, search, tags, export, settings, system
 - **Python CLI + SDK** — typer-based, with `--jq` filtering, `--paginate` auto-loop, `--dry-run` preview, `--output {json,table}`, shell completion
 - **RAG with citation provenance** — every retrieved chunk carries a `zotero://` URI for one-click traceback
-- **Cross-version manifest** — Zotero 7 / 8 / 9
+- **Tested on Zotero 8.0.4** — Zotero 7 not yet verified
 - **AGPL-3.0** — fully open source
 
 ## 📑 Contents
@@ -165,7 +165,7 @@ zotero-bridge collections list --jq '.[] | select(.parentID == null) | .name'
 ### Prerequisites
 
 - Node.js 18+
-- Zotero 7 or 8 installed locally
+- Zotero 8 installed locally
 - (Optional but recommended) WSL on Windows for the dev workflow
 
 ### Build & test
