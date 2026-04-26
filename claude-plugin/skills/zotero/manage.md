@@ -38,13 +38,13 @@ zotero-bridge rpc items.update '{"id":ITEM_ID,"fields":{"title":"修正后的标
 zotero-bridge rpc collections.create '{"name":"数字经济文献","parentId":null}'
 
 # Add papers to collection
-zotero-bridge rpc collections.addItems '{"id":COL_ID,"itemIds":[10,13,16]}'
+zotero-bridge rpc collections.addItems '{"id":COLLECTION_ID,"itemIds":[10,13,16]}'
 
 # Remove from collection (doesn't delete paper)
-zotero-bridge rpc collections.removeItems '{"id":COL_ID,"itemIds":[10]}'
+zotero-bridge rpc collections.removeItems '{"id":COLLECTION_ID,"itemIds":[10]}'
 
 # Rename
-zotero-bridge rpc collections.rename '{"id":COL_ID,"name":"新名称"}'
+zotero-bridge rpc collections.rename '{"id":COLLECTION_ID,"name":"新名称"}'
 ```
 
 ## Tags

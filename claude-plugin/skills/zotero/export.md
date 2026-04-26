@@ -31,7 +31,7 @@ zotero-bridge export bibliography 10 13 16
 
 Returns both `html` and `text` versions. Use `text` for plain output.
 
-For a specific style variant:
+For the author-date variant instead of the default numeric:
 ```bash
 zotero-bridge rpc export.bibliography '{"ids":[10],"style":"http://www.zotero.org/styles/gb-t-7714-2015-author-date"}'
 ```
@@ -44,10 +44,10 @@ zotero-bridge export bibtex 10 13 16
 
 ## Citation key
 
-Get a paper's citation key (for LaTeX `\cite{}`):
+Look up a paper's Better-BibTeX citation key (an `items.*` identity attribute) for building LaTeX `\cite{}` references:
 
 ```bash
-zotero-bridge rpc export.citationKey '{"id":10}'
+zotero-bridge rpc items.citationKey '{"id":10}'
 ```
 
 ## Present to user
