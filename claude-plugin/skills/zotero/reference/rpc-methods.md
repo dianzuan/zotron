@@ -12,7 +12,7 @@ Or directly over HTTP at `POST http://localhost:23119/zotero-bridge/rpc` with a 
 
 | Namespace | Methods | What it does |
 |---|---|---|
-| `items.*` | 17 | CRUD on Zotero items, add by DOI/URL/ISBN/file, recent, trash, duplicates, related |
+| `items.*` | 19 | CRUD on Zotero items, add by DOI/URL/ISBN/file, recent, trash, duplicates, related |
 | `collections.*` | 12 | List, create, rename, move, tree, items in collection |
 | `attachments.*` | 6 | List attachments, get fulltext (cache-file backed), get path, find PDF |
 | `notes.*` | 6 | Notes CRUD, annotations, search inside notes |
@@ -20,7 +20,7 @@ Or directly over HTTP at `POST http://localhost:23119/zotero-bridge/rpc` with a 
 | `tags.*` | 6 | List, add, remove, rename, delete (cross-library) |
 | `export.*` | 5 | BibTeX / CSL-JSON / RIS / CSV / bibliography (CiteProc) |
 | `settings.*` | 4 | Plugin-side preferences (e.g. OCR provider, embedding model) |
-| `system.*` | 10 | Ping, version, libraries, switchLibrary, sync, currentCollection, `system.reload` (self-reload for dev) |
+| `system.*` | 11 | Ping, version, libraries, switchLibrary, sync, currentCollection, `system.reload` (self-reload for dev) |
 
 Total: 77 methods.
 
