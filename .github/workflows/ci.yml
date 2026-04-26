@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  xpi:
+    name: XPI (TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run mocha tests
+        run: npm test
+
+      - name: Build XPI
+        run: npm run build
+
+  python:
+    name: Python (CLI + SDK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        working-directory: python
+        run: uv sync --extra dev
+
+      - name: Lint (ruff)
+        working-directory: python
+        run: uv run ruff check zotero_bridge tests
+
+      - name: Type check (mypy)
+        working-directory: python
+        run: uv run mypy zotero_bridge --ignore-missing-imports
+        continue-on-error: true  # mypy strictness phased in; not gate-blocking yet
+
+      - name: Run pytest
+        working-directory: python
+        run: uv run pytest -q
