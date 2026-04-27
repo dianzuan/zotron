@@ -85,8 +85,8 @@ describe("attachments handler", () => {
     });
   });
 
-  describe("list returns serializeItem array (fix #26)", () => {
-    it("returns [(serializeItem)] not custom shape", async () => {
+  describe("list returns attachment metadata", () => {
+    it("returns serialized attachments with contentType, linkMode, and path for duplicate-PDF checks", async () => {
       const parent: any = {
         id: 1, getAttachments: () => [10, 11],
       };
@@ -97,9 +97,12 @@ describe("attachments handler", () => {
         isNote: () => false, isAttachment: () => true,
         attachmentContentType: "application/pdf", attachmentLinkMode: 1,
         getCreators: () => [], getTags: () => [], getCollections: () => [], getRelations: () => ({}),
+        getFilePathAsync: sinon.stub().resolves("/storage/paper.pdf"),
       };
       const att2: any = { ...att1, id: 11, key: "A2",
-        getField: (n: string) => n === "title" ? "PDF2" : "" };
+        attachmentContentType: "application/octet-stream",
+        getField: (n: string) => n === "title" ? "PDF2" : "",
+        getFilePathAsync: sinon.stub().resolves("/storage/paper2.PDF") };
 
       const getAsyncStub = sinon.stub();
       getAsyncStub.withArgs(1).resolves(parent);
@@ -117,10 +120,15 @@ describe("attachments handler", () => {
       expect(result).to.have.lengthOf(2);
       // serializeItem-shape — has the standard envelope keys
       expect(result[0]).to.include.keys("id", "key", "itemType", "title", "dateAdded", "dateModified", "creators", "tags", "collections", "relations");
-      // NOT the old custom shape — `path` / `linkMode` / `contentType` keys are gone (they're not on serializeItem)
-      expect(result[0]).to.not.have.property("path");
-      expect(result[0]).to.not.have.property("linkMode");
-      expect(result[0]).to.not.have.property("contentType");
+      expect(result[0]).to.include({
+        contentType: "application/pdf",
+        linkMode: 1,
+        path: "/storage/paper.pdf",
+      });
+      expect(result[1]).to.include({
+        contentType: "application/octet-stream",
+        path: "/storage/paper2.PDF",
+      });
     });
   });
 

@@ -5,13 +5,30 @@ import { registerHandlers } from "../server";
 import { serializeItem } from "../utils/serialize";
 import { requireItem } from "../utils/guards";
 
+async function serializeAttachment(item: Zotero.Item): Promise<Record<string, any>> {
+  const data = serializeItem(item);
+  const attachment = item as any;
+  data.contentType = attachment.attachmentContentType || null;
+  data.linkMode = attachment.attachmentLinkMode ?? null;
+  if (typeof attachment.getFilePathAsync === "function") {
+    try {
+      data.path = await attachment.getFilePathAsync();
+    } catch {
+      data.path = null;
+    }
+  } else {
+    data.path = null;
+  }
+  return data;
+}
+
 export const attachmentsHandlers = {
   async list(params: { parentId: number }) {
     const parent = await requireItem(params.parentId);
     const attIDs = parent.getAttachments();
     if (attIDs.length === 0) return [];
     const atts = await Zotero.Items.getAsync(attIDs);
-    return atts.map(serializeItem);
+    return Promise.all(atts.map(serializeAttachment));
   },
 
   async getFulltext(params: { id: number }) {

@@ -152,6 +152,19 @@ def test_skip_duplicate_detects_pdf_via_filename_when_mime_is_wrong(tmp_path: Pa
     assert "attachments.add" not in methods
 
 
+def test_skip_duplicate_detects_pdf_via_x_pdf_mime(tmp_path: Path):
+    existing_pdf = [{"id": 1001, "contentType": "application/x-pdf",
+                     "title": "paper", "path": None}]
+    rpc = _make_rpc(item_id=500, duplicate=999, dup_attachments=existing_pdf)
+    pdf = _good_pdf(tmp_path)
+    item = {"itemType": "journalArticle", "title": "Dup", "DOI": "10.x/dup"}
+    result = push_item(rpc, item, pdf_path=pdf, collection=0,
+                       on_duplicate="skip")
+    assert result.pdf_attached is False
+    methods = [c.args[0] for c in rpc.call.call_args_list]
+    assert "attachments.add" not in methods
+
+
 def test_skip_duplicate_attaches_when_only_non_pdf_attachments(tmp_path: Path):
     """dup has attachments but none are PDFs (e.g., snapshot HTML) → do attach."""
     non_pdf = [{"id": 1002, "contentType": "text/html",
@@ -201,6 +214,7 @@ def test_update_duplicate_does_not_reattach_if_pdf_exists(tmp_path: Path):
     assert result.status == "updated"
     assert result.zotero_item_id == 999
     assert result.pdf_attached is False
+    assert result.pdf_size_bytes == 0
     methods = [c.args[0] for c in rpc.call.call_args_list]
     assert "items.update" in methods
     assert "attachments.list" in methods
@@ -216,6 +230,7 @@ def test_update_duplicate_attaches_pdf_if_missing(tmp_path: Path):
     assert result.status == "updated"
     assert result.zotero_item_id == 999
     assert result.pdf_attached is True
+    assert result.pdf_size_bytes > 0
     add_calls = [c for c in rpc.call.call_args_list
                  if c.args[0] == "attachments.add"]
     assert len(add_calls) == 1

@@ -75,7 +75,7 @@ def _item_has_pdf_attachment(rpc: Any, item_id: int) -> bool:
     # that wrote the wrong header). A MIME-only check false-negatives
     # on those and would re-attach a duplicate PDF.
     return any(
-        a.get("contentType") == "application/pdf"
+        a.get("contentType") in {"application/pdf", "application/x-pdf"}
         or (a.get("path") or "").lower().endswith(".pdf")
         for a in existing
     )
@@ -367,5 +367,5 @@ def push_item(
         status=status,
         zotero_item_id=item_id,
         pdf_attached=pdf_attached,
-        pdf_size_bytes=pdf_size,
+        pdf_size_bytes=pdf_size if pdf_attached else 0,
     )
