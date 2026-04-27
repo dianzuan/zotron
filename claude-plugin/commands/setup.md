@@ -139,6 +139,8 @@ If still `DOWN`:
 - Port 23119 connection refused? Zotero's HTTP server is off — `Edit → Settings → Advanced → Config Editor` → set `extensions.zotero.httpServer.enabled = true`, restart Zotero.
 - "Not compatible" warning? Verify Zotero version is 8.0+; only that range is tested. Earlier versions may still work but are unsupported.
 
+**Not the issue:** the `Edit → Settings → Advanced` checkbox **"Allow other applications on this computer to communicate with Zotero" / "Available at http://localhost:23119/api/"** binds to `httpServer.localAPI.enabled` and gates **only** Zotero's official `/api/*` REST endpoint. Custom plugin endpoints registered via `Zotero.Server.Endpoints[…]` (which is how `/zotron/rpc` works) bypass that check entirely — leaving the checkbox off is fine.
+
 Once `system.ping` returns `OK`, run `zotron system.libraries` to print the user's library names. Hand off to the `zotero` skill.
 
 ## Skip when
