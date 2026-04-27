@@ -1,6 +1,6 @@
-"""Tests for zotero_bridge.push.check_pdf_magic."""
+"""Tests for zotron.push.check_pdf_magic."""
 from pathlib import Path
-from zotero_bridge.push import check_pdf_magic
+from zotron.push import check_pdf_magic
 
 
 def test_valid_pdf(tmp_path: Path):

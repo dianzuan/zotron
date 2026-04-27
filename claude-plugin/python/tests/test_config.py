@@ -1,11 +1,11 @@
-"""Tests for zotero_bridge.config — load_config."""
+"""Tests for zotron.config — load_config."""
 
 import json
 import os
 from unittest.mock import MagicMock, patch
 
 
-from zotero_bridge.config import DEFAULTS, load_config
+from zotron.config import DEFAULTS, load_config
 
 
 # ---------------------------------------------------------------------------
@@ -13,15 +13,15 @@ from zotero_bridge.config import DEFAULTS, load_config
 # ---------------------------------------------------------------------------
 
 def _strip_zb_env(monkeypatch):
-    """Remove any real ZOTERO_BRIDGE_* env vars that could pollute results."""
+    """Remove any real ZOTRON_* env vars that could pollute results."""
     for key in list(os.environ):
-        if key.startswith("ZOTERO_BRIDGE_"):
+        if key.startswith("ZOTRON_"):
             monkeypatch.delenv(key, raising=False)
 
 
 def _no_zotero(monkeypatch):
     """Patch out _load_from_zotero so tests don't make real HTTP calls."""
-    monkeypatch.setattr("zotero_bridge.config._load_from_zotero", lambda url: None)
+    monkeypatch.setattr("zotron.config._load_from_zotero", lambda url: None)
 
 
 # ---------------------------------------------------------------------------
@@ -78,14 +78,14 @@ def test_env_overrides_file(tmp_path, monkeypatch):
         encoding="utf-8",
     )
 
-    monkeypatch.setenv("ZOTERO_BRIDGE_OCR_PROVIDER", "mineru")
-    monkeypatch.setenv("ZOTERO_BRIDGE_TIMEOUT", "60")
+    monkeypatch.setenv("ZOTRON_OCR_PROVIDER", "mineru")
+    monkeypatch.setenv("ZOTRON_TIMEOUT", "60")
 
     cfg = load_config(config_path=config_file)
 
     # env var wins over file
     assert cfg["ocr"]["provider"] == "mineru"
-    # env var wins over default (note: ZOTERO_BRIDGE_TIMEOUT → zotero.timeout)
+    # env var wins over default (note: ZOTRON_TIMEOUT → zotero.timeout)
     assert cfg["zotero"]["timeout"] == 60
 
 
@@ -132,7 +132,7 @@ def test_load_from_zotero_rpc(tmp_path, monkeypatch):
     assert cfg["ocr"]["output_dir"] == DEFAULTS["ocr"]["output_dir"]
 
     # Env var still wins over Zotero RPC
-    monkeypatch.setenv("ZOTERO_BRIDGE_OCR_PROVIDER", "mineru")
+    monkeypatch.setenv("ZOTRON_OCR_PROVIDER", "mineru")
     with patch("httpx.post", return_value=mock_response):
         cfg2 = load_config(config_path=nonexistent)
     assert cfg2["ocr"]["provider"] == "mineru"

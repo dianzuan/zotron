@@ -1,4 +1,4 @@
-"""RAG CLI for Zotero Bridge — index, search, status subcommands."""
+"""RAG CLI for Zotron — index, search, status subcommands."""
 
 from __future__ import annotations
 
@@ -8,12 +8,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from zotero_bridge.collections import find_by_name as _find_collection_by_name
-from zotero_bridge.config import load_config
-from zotero_bridge.rpc import ZoteroRPC
-from zotero_bridge.rag.chunker import chunk_text
-from zotero_bridge.rag.embedder import create_embedder
-from zotero_bridge.rag.search import VectorStore
+from zotron.collections import find_by_name as _find_collection_by_name
+from zotron.config import load_config
+from zotron.rpc import ZoteroRPC
+from zotron.rag.chunker import chunk_text
+from zotron.rag.embedder import create_embedder
+from zotron.rag.search import VectorStore
 
 
 # ---------------------------------------------------------------------------
@@ -21,7 +21,7 @@ from zotero_bridge.rag.search import VectorStore
 # ---------------------------------------------------------------------------
 
 def _store_path(collection_name: str) -> Path:
-    return Path("~/.local/share/zotero-bridge/rag").expanduser() / f"{collection_name}.json"
+    return Path("~/.local/share/zotron/rag").expanduser() / f"{collection_name}.json"
 
 
 def _find_collection_id(rpc: ZoteroRPC, name: str) -> int | None:
@@ -84,7 +84,7 @@ def _build_embedder(cfg: dict[str, Any]):
 # ---------------------------------------------------------------------------
 
 def cmd_index(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
-    rpc_url = cfg.get("zotero", {}).get("rpc_url", "http://localhost:23119/rpc")
+    rpc_url = cfg.get("zotero", {}).get("rpc_url", "http://localhost:23119/zotron/rpc")
     rpc = ZoteroRPC(rpc_url)
 
     collection_id = _find_collection_id(rpc, args.collection)
@@ -213,7 +213,7 @@ def cmd_status(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="zotero-rag",
+        prog="zotron-rag",
         description="RAG index and search for Zotero collections",
     )
     sub = parser.add_subparsers(dest="command", required=True)
@@ -224,8 +224,8 @@ def main() -> None:
         help="Index a Zotero collection",
         epilog=(
             "Examples:\n"
-            "  zotero-rag index --collection \"2026-AI\"\n"
-            "  zotero-rag index --collection \"2026-AI\" --rebuild\n"
+            "  zotron-rag index --collection \"2026-AI\"\n"
+            "  zotron-rag index --collection \"2026-AI\" --rebuild\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -238,8 +238,8 @@ def main() -> None:
         help="Search an indexed collection",
         epilog=(
             "Examples:\n"
-            "  zotero-rag search --collection \"2026-AI\" \"transformer architecture\"\n"
-            "  zotero-rag search --collection \"climate\" \"sea level rise\"\n"
+            "  zotron-rag search --collection \"2026-AI\" \"transformer architecture\"\n"
+            "  zotron-rag search --collection \"climate\" \"sea level rise\"\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -256,8 +256,8 @@ def main() -> None:
         help="Retrieve top-K chunks with full citation provenance.",
         epilog=(
             "Examples:\n"
-            "  zotero-rag cite \"transformer\" --top-k 5\n"
-            "  zotero-rag cite \"climate change\" --output markdown\n"
+            "  zotron-rag cite \"transformer\" --top-k 5\n"
+            "  zotron-rag cite \"climate change\" --output markdown\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -280,12 +280,12 @@ def main() -> None:
         if not store_path.exists():
             print(
                 f"Error: no index for collection '{args.collection}'. "
-                f"Run `zotero-rag index --collection {args.collection}` first.",
+                f"Run `zotron-rag index --collection {args.collection}` first.",
                 file=sys.stderr,
             )
             sys.exit(2)
 
-        from zotero_bridge.rag.citation import (
+        from zotron.rag.citation import (
             retrieve_with_citations,
             format_citation_markdown,
             format_citation_json,

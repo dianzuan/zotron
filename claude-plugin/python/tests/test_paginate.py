@@ -1,9 +1,9 @@
-"""Tests for zotero_bridge._paginate.paginate."""
+"""Tests for zotron._paginate.paginate."""
 from unittest.mock import MagicMock
 
 import pytest
 
-from zotero_bridge._paginate import paginate
+from zotron._paginate import paginate
 
 
 def test_paginate_list_response_loops_until_short_page():

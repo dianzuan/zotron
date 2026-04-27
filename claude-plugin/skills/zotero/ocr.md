@@ -6,23 +6,23 @@ Convert PDFs in a Zotero collection to high-quality Markdown via cloud OCR, stor
 
 ```bash
 # OCR all PDFs in a collection (most common)
-zotero-ocr --collection "数字经济"
+zotron-ocr --collection "数字经济"
 
 # OCR a single paper
-zotero-ocr --item 12345
+zotron-ocr --item 12345
 
 # Force re-OCR (even if already done)
-zotero-ocr --collection "数字经济" --force
+zotron-ocr --collection "数字经济" --force
 
 # Check status
-zotero-ocr status --collection "数字经济"
+zotron-ocr status --collection "数字经济"
 ```
 
 ## When to use
 
 OCR is the first step before building a RAG index. Zotero's built-in text extraction produces poor results for Chinese PDFs. Cloud OCR (GLM-4V) produces structured Markdown with headings, tables, and formulas preserved.
 
-**Always OCR before RAG:** `zotero-ocr` → `zotero-rag index`
+**Always OCR before RAG:** `zotron-ocr` → `zotron-rag index`
 
 ## Configuration
 
@@ -31,7 +31,7 @@ Needs OCR API key. Set via environment:
 export OCR_PROVIDER=glm
 export OCR_API_KEY=your-key
 ```
-Or config file: `~/.config/zotero-bridge/config.json`
+Or config file: `~/.config/zotron/config.json`
 
 ## Output
 

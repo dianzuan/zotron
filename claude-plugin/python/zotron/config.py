@@ -17,7 +17,7 @@ DEFAULTS: dict[str, Any] = {
     "ocr": {
         "provider": "glm",          # "glm" | "paddleocr" | "mineru"
         "glm_api_key": "",
-        "output_dir": "~/zotero-ocr-output",
+        "output_dir": "~/zotron-ocr-output",
         "concurrency": 4,
     },
     "embedding": {
@@ -28,13 +28,13 @@ DEFAULTS: dict[str, Any] = {
         "openai_model": "text-embedding-3-small",
     },
     "rag": {
-        "index_dir": "~/.local/share/zotero-bridge/index",
+        "index_dir": "~/.local/share/zotron/index",
         "chunk_size": 512,
         "chunk_overlap": 64,
         "top_k": 5,
     },
     "zotero": {
-        "rpc_url": "http://localhost:23119/zotero-bridge/rpc",
+        "rpc_url": "http://localhost:23119/zotron/rpc",
         "timeout": 30,
     },
 }
@@ -45,24 +45,24 @@ DEFAULTS: dict[str, Any] = {
 # ---------------------------------------------------------------------------
 
 ENV_MAP: dict[str, tuple[str, str]] = {
-    "ZOTERO_BRIDGE_OCR_PROVIDER":        ("ocr", "provider"),
-    "ZOTERO_BRIDGE_GLM_API_KEY":         ("ocr", "glm_api_key"),
-    "ZOTERO_BRIDGE_OCR_OUTPUT_DIR":      ("ocr", "output_dir"),
-    "ZOTERO_BRIDGE_OCR_CONCURRENCY":     ("ocr", "concurrency"),
-    "ZOTERO_BRIDGE_EMBED_PROVIDER":      ("embedding", "provider"),
-    "ZOTERO_BRIDGE_EMBED_MODEL":         ("embedding", "model"),
-    "ZOTERO_BRIDGE_OLLAMA_BASE_URL":     ("embedding", "ollama_base_url"),
-    "ZOTERO_BRIDGE_OPENAI_API_KEY":      ("embedding", "openai_api_key"),
-    "ZOTERO_BRIDGE_OPENAI_MODEL":        ("embedding", "openai_model"),
-    "ZOTERO_BRIDGE_INDEX_DIR":           ("rag", "index_dir"),
-    "ZOTERO_BRIDGE_CHUNK_SIZE":          ("rag", "chunk_size"),
-    "ZOTERO_BRIDGE_CHUNK_OVERLAP":       ("rag", "chunk_overlap"),
-    "ZOTERO_BRIDGE_TOP_K":               ("rag", "top_k"),
-    "ZOTERO_BRIDGE_RPC_URL":             ("zotero", "rpc_url"),
-    "ZOTERO_BRIDGE_TIMEOUT":             ("zotero", "timeout"),
+    "ZOTRON_OCR_PROVIDER":        ("ocr", "provider"),
+    "ZOTRON_GLM_API_KEY":         ("ocr", "glm_api_key"),
+    "ZOTRON_OCR_OUTPUT_DIR":      ("ocr", "output_dir"),
+    "ZOTRON_OCR_CONCURRENCY":     ("ocr", "concurrency"),
+    "ZOTRON_EMBED_PROVIDER":      ("embedding", "provider"),
+    "ZOTRON_EMBED_MODEL":         ("embedding", "model"),
+    "ZOTRON_OLLAMA_BASE_URL":     ("embedding", "ollama_base_url"),
+    "ZOTRON_OPENAI_API_KEY":      ("embedding", "openai_api_key"),
+    "ZOTRON_OPENAI_MODEL":        ("embedding", "openai_model"),
+    "ZOTRON_INDEX_DIR":           ("rag", "index_dir"),
+    "ZOTRON_CHUNK_SIZE":          ("rag", "chunk_size"),
+    "ZOTRON_CHUNK_OVERLAP":       ("rag", "chunk_overlap"),
+    "ZOTRON_TOP_K":               ("rag", "top_k"),
+    "ZOTRON_RPC_URL":             ("zotero", "rpc_url"),
+    "ZOTRON_TIMEOUT":             ("zotero", "timeout"),
 }
 
-_DEFAULT_CONFIG_PATH = Path("~/.config/zotero-bridge/config.json")
+_DEFAULT_CONFIG_PATH = Path("~/.config/zotron/config.json")
 
 
 def _camel_to_snake(name: str) -> str:
@@ -114,7 +114,7 @@ def load_config(config_path: str | Path | None = None) -> dict[str, Any]:
 
     Priority (highest wins):
     1. Environment variables
-    2. Config file (``~/.config/zotero-bridge/config.json`` by default)
+    2. Config file (``~/.config/zotron/config.json`` by default)
     3. Zotero RPC (``settings.getAll``) — primary source when Zotero is running
     4. Built-in defaults
 
@@ -122,7 +122,7 @@ def load_config(config_path: str | Path | None = None) -> dict[str, Any]:
     ----------
     config_path:
         Path to a JSON config file.  Defaults to
-        ``~/.config/zotero-bridge/config.json``.  Missing file is silently
+        ``~/.config/zotron/config.json``.  Missing file is silently
         ignored.
 
     Returns

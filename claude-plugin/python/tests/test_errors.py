@@ -1,6 +1,6 @@
-"""Tests for zotero_bridge.errors."""
-from zotero_bridge.errors import (
-    ZoteroBridgeError,
+"""Tests for zotron.errors."""
+from zotron.errors import (
+    ZotronError,
     ZoteroUnavailable,
     CollectionNotFound,
     CollectionAmbiguous,
@@ -12,7 +12,7 @@ def test_all_subclass_base():
     for cls in (
         ZoteroUnavailable, CollectionNotFound, CollectionAmbiguous, InvalidPDF,
     ):
-        assert issubclass(cls, ZoteroBridgeError)
+        assert issubclass(cls, ZotronError)
 
 
 def test_collection_ambiguous_carries_candidates():

@@ -1,10 +1,10 @@
 {
   "addons": {
-    "zotero-bridge@diamondrill": {
+    "zotron@diamondrill": {
       "updates": [
         {
-          "version": "1.4.0",
-          "update_link": "https://github.com/dianzuan/zotero-bridge/releases/download/v1.4.0/zotero-bridge.xpi",
+          "version": "0.1.0",
+          "update_link": "https://github.com/dianzuan/zotron/releases/download/v0.1.0/zotron.xpi",
           "update_hash": "sha512:74e79ba9a9c30464526af23c1d2246f4b4f735b8f0494d3117e4cc3f87098ee06e5fe5169dc2170f3084481f95f88dc08dfaf26f7dc2056a59abfbe0d90cc1a5",
           "applications": {
             "zotero": {

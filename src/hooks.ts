@@ -14,7 +14,7 @@ export async function onStartup() {
   registerEndpoint();
 
   // Set preference defaults
-  const PREF = "extensions.zotero-bridge.";
+  const PREF = "extensions.zotron.";
   const defaults: Record<string, string> = {
     "ocr.provider": "glm",
     "ocr.apiKey": "",
@@ -32,13 +32,13 @@ export async function onStartup() {
   }
 
   // Register preference pane
-  const rootURI = (Zotero as any).ZoteroBridge?.data?.rootURI;
+  const rootURI = (Zotero as any).Zotron?.data?.rootURI;
   if (rootURI) {
     Zotero.PreferencePanes.register({
-      pluginID: "zotero-bridge@diamondrill",
+      pluginID: "zotron@diamondrill",
       src: rootURI + "content/preferences.xhtml",
       scripts: [rootURI + "content/preferences.js"],
-      label: "Zotero Bridge",
+      label: "Zotron",
       image: rootURI + "content/icons/icon.png",
     });
   }

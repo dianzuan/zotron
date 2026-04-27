@@ -1,6 +1,6 @@
 """Tests for section-aware text chunker."""
 
-from zotero_bridge.rag.chunker import chunk_text
+from zotron.rag.chunker import chunk_text
 
 
 def test_short_text_single_chunk():

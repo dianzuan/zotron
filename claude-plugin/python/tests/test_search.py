@@ -1,4 +1,4 @@
-from zotero_bridge.rag.search import VectorStore
+from zotron.rag.search import VectorStore
 
 
 def make_store() -> VectorStore:
@@ -68,7 +68,7 @@ def test_clear_item():
 
 def test_search_includes_attachment_id_and_chunk_index():
     """Search results expose attachment_id and chunk_index for citation provenance."""
-    from zotero_bridge.rag.search import VectorStore
+    from zotron.rag.search import VectorStore
     store = VectorStore(collection="test", collection_id=1, model="m")
     store.add_chunk(
         item_id="ITEM_A",

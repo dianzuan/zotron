@@ -1,4 +1,4 @@
-"""Source-agnostic push layer on top of zotero_bridge.rpc.
+"""Source-agnostic push layer on top of zotron.rpc.
 
 Exposes high-level helpers used by scholar-source plugins (cnki-plugin,
 future arxiv-plugin, etc.) to push item metadata + PDF attachments into
@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from zotero_bridge.errors import CollectionAmbiguous, CollectionNotFound, InvalidPDF
+from zotron.errors import CollectionAmbiguous, CollectionNotFound, InvalidPDF
 
 
 def _is_wsl() -> bool:

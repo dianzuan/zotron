@@ -1,17 +1,17 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="Zotero Bridge logo" width="160" />
+<img src="assets/logo.png" alt="Zotron logo" width="160" />
 
-# Zotero Bridge
+# Zotron
 
 **Typed JSON-RPC 2.0 bridge for Zotero 8**
 
 *77 internal API methods over HTTP — for AI agents, CLIs, and external tools.*
 
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![CI](https://github.com/dianzuan/zotero-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/dianzuan/zotero-bridge/actions/workflows/ci.yml)
+[![CI](https://github.com/dianzuan/zotron/actions/workflows/ci.yml/badge.svg)](https://github.com/dianzuan/zotron/actions/workflows/ci.yml)
 [![Zotero](https://img.shields.io/badge/Zotero-8.0+-orange)](https://www.zotero.org/)
-[![GitHub release](https://img.shields.io/github/v/release/dianzuan/zotero-bridge?color=brightgreen)](https://github.com/dianzuan/zotero-bridge/releases/latest)
+[![GitHub release](https://img.shields.io/github/v/release/dianzuan/zotron?color=brightgreen)](https://github.com/dianzuan/zotron/releases/latest)
 
 [**English**](README.md) · [**简体中文**](README.zh-CN.md)
 
@@ -21,13 +21,13 @@
 
 ## What is this?
 
-Zotero Bridge is a [bootstrap-extension](https://www.zotero.org/support/dev/zotero_7_for_developers) plugin that turns your running Zotero into a JSON-RPC 2.0 server. External tools — research agents, citation pipelines, scrapers, MCP servers, custom CLIs — read and write your library over plain HTTP without touching SQLite.
+Zotron is a [bootstrap-extension](https://www.zotero.org/support/dev/zotero_7_for_developers) plugin that turns your running Zotero into a JSON-RPC 2.0 server. External tools — research agents, citation pipelines, scrapers, MCP servers, custom CLIs — read and write your library over plain HTTP without touching SQLite.
 
 ```
 ┌──────────────────────────┐         ┌─────────────────────────────┐
 │  Your tool / agent       │         │  Zotero (with this plugin)  │
 │                          │         │                             │
-│  curl /zotero-bridge/rpc │ ──HTTP─▶│  77 typed RPC methods       │
+│  curl /zotron/rpc        │ ──HTTP─▶│  77 typed RPC methods       │
 │  cnki-plugin push        │         │  • items.* (19)             │
 │  research agent          │         │  • collections.* (12)       │
 │  Better-BibTeX consumer  │         │  • attachments.* (6)        │
@@ -44,7 +44,7 @@ Validated on Zotero 8.0.4 against a 5000+-item / 70+-collection library. Zotero 
 
 ## Why?
 
-Zotero's built-in `localhost:23119` HTTP service is hardcoded for the browser-extension use case (a handful of endpoints like `/connector/getSelectedCollection`) — not a general-purpose API. The workarounds — vendor a SQLite reader (fragile, schema-versioned, write-locked), `eval` JS through a debug-server backdoor (insecure, unsupported), or hand-roll a bootstrap plugin per project (rebuilds the wheel) — are all bad. Zotero Bridge fills that gap with a single stable typed surface any tool can target.
+Zotero's built-in `localhost:23119` HTTP service is hardcoded for the browser-extension use case (a handful of endpoints like `/connector/getSelectedCollection`) — not a general-purpose API. The workarounds — vendor a SQLite reader (fragile, schema-versioned, write-locked), `eval` JS through a debug-server backdoor (insecure, unsupported), or hand-roll a bootstrap plugin per project (rebuilds the wheel) — are all bad. Zotron fills that gap with a single stable typed surface any tool can target.
 
 ## Quick start
 
@@ -53,8 +53,8 @@ Zotero's built-in `localhost:23119` HTTP service is hardcoded for the browser-ex
 **Prerequisites:** [Claude Code](https://docs.claude.com/en/docs/claude-code/), [`uv`](https://docs.astral.sh/uv/getting-started/installation/), Zotero 8 desktop.
 
 ```
-/plugin marketplace add dianzuan/zotero-bridge
-/plugin install zotero-bridge@zotero-bridge
+/plugin marketplace add dianzuan/zotron
+/plugin install zotron@zotron
 /setup
 ```
 
@@ -63,13 +63,13 @@ Zotero's built-in `localhost:23119` HTTP service is hardcoded for the browser-ex
 ### Path B — Python CLI / SDK
 
 ```bash
-# 1) Install the XPI manually from https://github.com/dianzuan/zotero-bridge/releases/latest
+# 1) Install the XPI manually from https://github.com/dianzuan/zotron/releases/latest
 # 2) Install the CLI from git (not yet on PyPI):
-uv tool install "git+https://github.com/dianzuan/zotero-bridge.git#subdirectory=claude-plugin/python"
+uv tool install "git+https://github.com/dianzuan/zotron.git#subdirectory=claude-plugin/python"
 
-zotero-bridge ping
-zotero-bridge search quick "transformer attention" --limit 10
-zotero-bridge rpc items.get '{"id":12345}'    # escape hatch — covers all 77 methods
+zotron ping
+zotron search quick "transformer attention" --limit 10
+zotron rpc items.get '{"id":12345}'    # escape hatch — covers all 77 methods
 ```
 
 `--jq` filters output (`gh api --jq` style); `--install-completion {bash|zsh|fish|powershell}` enables shell completion. SDK contract: [`docs/api-stability.md`](docs/api-stability.md).
@@ -77,7 +77,7 @@ zotero-bridge rpc items.get '{"id":12345}'    # escape hatch — covers all 77 m
 ### Path C — Raw HTTP
 
 ```bash
-curl -s -X POST http://localhost:23119/zotero-bridge/rpc \
+curl -s -X POST http://localhost:23119/zotron/rpc \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","method":"system.ping","id":1}'
 ```
@@ -87,10 +87,10 @@ curl -s -X POST http://localhost:23119/zotero-bridge/rpc \
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `/setup` says `MISSING_UV` | `uv` not on PATH | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| Skill startup banner: *"Zotero Bridge not detected"* | Zotero not running or XPI not installed | Start Zotero, then re-run `/setup` |
+| Skill startup banner: *"Zotron not detected"* | Zotero not running or XPI not installed | Start Zotero, then re-run `/setup` |
 | `connection refused` on port 23119 | Zotero's built-in HTTP server is off | Edit → Settings → Advanced → Config Editor → `extensions.zotero.httpServer.enabled = true` |
 | Skill doesn't auto-trigger after install | Plugin not loaded into the session | `/reload-plugins`, or restart Claude Code |
-| `zotero-bridge: command not found` from Bash tool | Plugin's `bin/` not on PATH | Plugin must be enabled — check the **Installed** tab in `/plugin` |
+| `zotron: command not found` from Bash tool | Plugin's `bin/` not on PATH | Plugin must be enabled — check the **Installed** tab in `/plugin` |
 
 ## API surface
 
@@ -112,11 +112,11 @@ curl -s -X POST http://localhost:23119/zotero-bridge/rpc \
 
 ## RAG with citations
 
-The RAG layer (`claude-plugin/python/zotero_bridge/rag/`) returns each retrieved chunk as a `Citation` carrying the Zotero item key, attachment id, section heading, chunk index, similarity score, verbatim text, and a `zotero://` URI for one-click verification.
+The RAG layer (`claude-plugin/python/zotron/rag/`) returns each retrieved chunk as a `Citation` carrying the Zotero item key, attachment id, section heading, chunk index, similarity score, verbatim text, and a `zotero://` URI for one-click verification.
 
 ```bash
-zotero-rag index --collection "ML Papers"
-zotero-rag cite "how do transformers attend to long-range context?" --collection "ML Papers" --output json
+zotron-rag index --collection "ML Papers"
+zotron-rag cite "how do transformers attend to long-range context?" --collection "ML Papers" --output json
 ```
 
 `--output json` is the AI-facing stable contract:
@@ -142,7 +142,7 @@ Hot-reload: `ZOTERO_PLUGIN_ZOTERO_BIN_PATH=/path/to/zotero npm start`. On WSL, s
 ```bash
 npm run build && \
   rsync -a --delete .scaffold/build/addon/ "$DEV_ADDON_DIR" && \
-  curl -s -X POST http://localhost:23119/zotero-bridge/rpc \
+  curl -s -X POST http://localhost:23119/zotron/rpc \
     -H 'Content-Type: application/json' \
     -d '{"jsonrpc":"2.0","method":"system.reload","id":1}'
 ```

@@ -1,11 +1,11 @@
-# Zotero Bridge XPI 插件设计文档
+# Zotron XPI 插件设计文档
 
 > Phase 1：基础能力，追平 cli-anything-zotero (~55 命令级别)
 > Phase 2（后续）：OCR 集成、CNKI 元数据自主抓取、语义搜索、引用图谱
 
 ## 目标
 
-自建 Zotero 7 xpi 插件 `zotero-bridge`，通过 HTTP JSON-RPC 暴露 Zotero 内部 JS API，配合 CLI wrapper 供 Claude Code 调用。
+自建 Zotero 7 xpi 插件 `zotron`，通过 HTTP JSON-RPC 暴露 Zotero 内部 JS API，配合 CLI wrapper 供 Claude Code 调用。
 
 **定位**：不是 Zotero 的遥控器，是中文学术研究的智能管家。Phase 1 先打好基础盘。
 
@@ -14,11 +14,11 @@
 ```
 Zotero 7 进程内
 ┌──────────────────────────────────┐
-│  zotero-bridge.xpi (TypeScript)  │
+│  zotron.xpi (TypeScript)  │
 │  ├── bootstrap.js 生命周期       │
 │  ├── JSON-RPC Router             │
 │  │   └── Zotero.Server.Endpoints │
-│  │       /zotero-bridge/rpc      │
+│  │       /zotron/rpc      │
 │  ├── handlers/                   │
 │  │   ├── items.ts    (条目 CRUD) │
 │  │   ├── search.ts   (搜索)     │
@@ -51,13 +51,13 @@ Claude Code 侧
 | UI 工具 | zotero-plugin-toolkit | 菜单/preference/快捷键封装 |
 | HTTP 协议 | JSON-RPC 2.0 over `Zotero.Server.Endpoints` | BBT 验证过的模式，单端点 |
 | 端口 | 23119（Zotero 内置，共用） | 不额外占端口 |
-| 路径 | `/zotero-bridge/rpc` | 避免和其他插件冲突 |
+| 路径 | `/zotron/rpc` | 避免和其他插件冲突 |
 | CLI | Bash shell script | 薄壳，调 curl，零依赖 |
 | 构建 | esbuild + npm scripts | 模板自带 |
 
 ## JSON-RPC 协议
 
-单端点 `POST http://localhost:23119/zotero-bridge/rpc`
+单端点 `POST http://localhost:23119/zotron/rpc`
 
 请求：
 ```json
@@ -215,7 +215,7 @@ Claude Code 侧
 set -euo pipefail
 METHOD="${1:?Usage: zotero-cli <method> [params]}"
 PARAMS="${2:-{}}"
-curl -s "http://localhost:23119/zotero-bridge/rpc" \
+curl -s "http://localhost:23119/zotron/rpc" \
   -H "Content-Type: application/json" \
   -d "{\"jsonrpc\":\"2.0\",\"method\":\"$METHOD\",\"params\":$PARAMS,\"id\":1}" \
   | python3 -c "
@@ -236,7 +236,7 @@ zotero-cli export.bibliography '{"ids":[12345],"style":"gb-t-7714-2015"}'
 ## xpi 项目结构
 
 ```
-zotero-bridge/
+zotron/
 ├── package.json
 ├── tsconfig.json
 ├── src/
@@ -290,7 +290,7 @@ zotero-bridge/
 │   ├── zotero-add/SKILL.md
 │   ├── zotero-export/SKILL.md
 │   ├── zotero-manage/SKILL.md
-│   └── zotero-ocr/SKILL.md    # Phase 2
+│   └── zotron-ocr/SKILL.md    # Phase 2
 └── agents/
     └── zotero-researcher.md
 ```

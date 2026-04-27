@@ -1,9 +1,9 @@
-"""Tests for zotero_bridge._output.emit and _render_table."""
+"""Tests for zotron._output.emit and _render_table."""
 import json
 
 import pytest
 
-from zotero_bridge._output import emit
+from zotron._output import emit
 
 
 def test_emit_json_default_round_trips(capsys):

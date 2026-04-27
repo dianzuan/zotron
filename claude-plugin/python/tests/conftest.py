@@ -1,1 +1,1 @@
-"""Shared pytest fixtures for zotero-bridge-tools tests."""
+"""Shared pytest fixtures for zotron-tools tests."""

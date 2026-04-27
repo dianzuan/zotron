@@ -1,12 +1,12 @@
 {
-  "name": "zotero-bridge",
+  "name": "zotron",
   "description": "Zotero skill for Claude Code — search, manage, OCR, and RAG over your library",
   "owner": { "name": "diamondrill" },
   "plugins": [
     {
-      "name": "zotero-bridge",
+      "name": "zotron",
       "description": "Zotero library skill for Claude Code — search, manage, export, OCR, and RAG over your Zotero papers",
-      "version": "1.4.0",
+      "version": "0.1.0",
       "source": "./claude-plugin",
       "author": { "name": "diamondrill" }
     }

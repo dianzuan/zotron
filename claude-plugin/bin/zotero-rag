@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-# Zotero RAG — semantic search for Zotero collections
-# Usage: zotero-rag index --collection "数字经济" | zotero-rag search --collection "..." "query"
-set -euo pipefail
-exec uv run --project "${CLAUDE_PLUGIN_ROOT}/python" zotero-rag "$@"

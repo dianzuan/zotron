@@ -1,20 +1,20 @@
-# Zotero Bridge XPI Phase 1 Implementation Plan
+# Zotron XPI Phase 1 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a Zotero 7 XPI plugin exposing 60 JSON-RPC methods over HTTP, plus a CLI wrapper and Claude Code plugin for integration.
 
-**Architecture:** TypeScript XPI plugin registers a single JSON-RPC endpoint at `POST /zotero-bridge/rpc` via `Zotero.Server.Endpoints`. A Bash CLI wrapper (`zotero-cli`) sends curl requests to this endpoint. Claude Code Skills orchestrate the CLI.
+**Architecture:** TypeScript XPI plugin registers a single JSON-RPC endpoint at `POST /zotron/rpc` via `Zotero.Server.Endpoints`. A Bash CLI wrapper (`zotero-cli`) sends curl requests to this endpoint. Claude Code Skills orchestrate the CLI.
 
 **Tech Stack:** TypeScript, esbuild, zotero-plugin-template (windingwind), zotero-plugin-toolkit, zotero-types, Bash
 
-**Spec:** `docs/superpowers/specs/2026-04-10-zotero-bridge-xpi-design.md`
+**Spec:** `docs/superpowers/specs/2026-04-10-zotron-xpi-design.md`
 
 ---
 
 ## File Map
 
-### XPI Plugin (`zotero-bridge/`)
+### XPI Plugin (`zotron/`)
 
 | File | Responsibility |
 |------|---------------|
@@ -58,26 +58,26 @@
 ## Task 1: Scaffold XPI project
 
 **Files:**
-- Create: `zotero-bridge/package.json`
-- Create: `zotero-bridge/tsconfig.json`
-- Create: `zotero-bridge/zotero-plugin.config.ts`
-- Create: `zotero-bridge/addon/manifest.json`
-- Create: `zotero-bridge/addon/bootstrap.js`
-- Create: `zotero-bridge/addon/locale/en-US/addon.ftl`
-- Create: `zotero-bridge/addon/locale/zh-CN/addon.ftl`
+- Create: `zotron/package.json`
+- Create: `zotron/tsconfig.json`
+- Create: `zotron/zotero-plugin.config.ts`
+- Create: `zotron/addon/manifest.json`
+- Create: `zotron/addon/bootstrap.js`
+- Create: `zotron/addon/locale/en-US/addon.ftl`
+- Create: `zotron/addon/locale/zh-CN/addon.ftl`
 
 - [ ] **Step 1: Create project directory and package.json**
 
 ```bash
-mkdir -p zotero-bridge
+mkdir -p zotron
 ```
 
 ```json
-// zotero-bridge/package.json
+// zotron/package.json
 {
-  "name": "zotero-bridge",
+  "name": "zotron",
   "version": "1.0.0",
-  "description": "Zotero Bridge - HTTP JSON-RPC API for Zotero 7",
+  "description": "Zotron - HTTP JSON-RPC API for Zotero 7",
   "scripts": {
     "start": "zotero-plugin serve",
     "build": "tsc --noEmit && zotero-plugin build",
@@ -101,7 +101,7 @@ mkdir -p zotero-bridge
 - [ ] **Step 2: Create tsconfig.json**
 
 ```json
-// zotero-bridge/tsconfig.json
+// zotron/tsconfig.json
 {
   "compilerOptions": {
     "module": "ESNext",
@@ -121,13 +121,13 @@ mkdir -p zotero-bridge
 - [ ] **Step 3: Create zotero-plugin.config.ts**
 
 ```typescript
-// zotero-bridge/zotero-plugin.config.ts
+// zotron/zotero-plugin.config.ts
 import { defineConfig } from "zotero-plugin-scaffold";
 
 export default defineConfig({
-  name: "Zotero Bridge",
-  id: "zotero-bridge@diamondrill",
-  namespace: "ZoteroBridge",
+  name: "Zotron",
+  id: "zotron@diamondrill",
+  namespace: "Zotron",
   build: {
     esbuildOptions: [
       {
@@ -143,7 +143,7 @@ export default defineConfig({
 - [ ] **Step 4: Create addon/manifest.json**
 
 ```json
-// zotero-bridge/addon/manifest.json
+// zotron/addon/manifest.json
 {
   "manifest_version": 2,
   "name": "__addonName__",
@@ -174,13 +174,13 @@ The `addon/bootstrap.js` is the standard Firefox bootstrap lifecycle file. Use t
 
 ```bash
 # Copy from template or generate via:
-cd zotero-bridge && npx degit windingwind/zotero-plugin-template#main addon/bootstrap.js --force
+cd zotron && npx degit windingwind/zotero-plugin-template#main addon/bootstrap.js --force
 ```
 
 If manual creation needed, the essential bootstrap.js:
 
 ```javascript
-// zotero-bridge/addon/bootstrap.js
+// zotron/addon/bootstrap.js
 var chromeHandle;
 
 function install(data, reason) {}
@@ -230,28 +230,28 @@ function onMainWindowUnload({ window }) {
 - [ ] **Step 6: Create locale files**
 
 ```ftl
-# zotero-bridge/addon/locale/en-US/addon.ftl
-startup-begin = Zotero Bridge is loading...
-startup-finish = Zotero Bridge ready. JSON-RPC endpoint: /zotero-bridge/rpc
+# zotron/addon/locale/en-US/addon.ftl
+startup-begin = Zotron is loading...
+startup-finish = Zotron ready. JSON-RPC endpoint: /zotron/rpc
 ```
 
 ```ftl
-# zotero-bridge/addon/locale/zh-CN/addon.ftl
-startup-begin = Zotero Bridge 正在加载...
-startup-finish = Zotero Bridge 就绪。JSON-RPC 端点: /zotero-bridge/rpc
+# zotron/addon/locale/zh-CN/addon.ftl
+startup-begin = Zotron 正在加载...
+startup-finish = Zotron 就绪。JSON-RPC 端点: /zotron/rpc
 ```
 
 - [ ] **Step 7: Create placeholder icon**
 
 ```bash
-mkdir -p zotero-bridge/addon/content/icons
+mkdir -p zotron/addon/content/icons
 # Create a simple 48x48 PNG (or copy from template)
 ```
 
 - [ ] **Step 8: Install dependencies**
 
 ```bash
-cd zotero-bridge && npm install
+cd zotron && npm install
 ```
 
 Expected: `node_modules` created, no errors.
@@ -259,8 +259,8 @@ Expected: `node_modules` created, no errors.
 - [ ] **Step 9: Commit**
 
 ```bash
-git add zotero-bridge/
-git commit -m "feat(zotero-bridge): scaffold XPI project from zotero-plugin-template"
+git add zotron/
+git commit -m "feat(zotron): scaffold XPI project from zotero-plugin-template"
 ```
 
 ---
@@ -268,15 +268,15 @@ git commit -m "feat(zotero-bridge): scaffold XPI project from zotero-plugin-temp
 ## Task 2: JSON-RPC Router + Response Utilities
 
 **Files:**
-- Create: `zotero-bridge/src/index.ts`
-- Create: `zotero-bridge/src/hooks.ts`
-- Create: `zotero-bridge/src/server.ts`
-- Create: `zotero-bridge/src/utils/serialize.ts`
+- Create: `zotron/src/index.ts`
+- Create: `zotron/src/hooks.ts`
+- Create: `zotron/src/server.ts`
+- Create: `zotron/src/utils/serialize.ts`
 
 - [ ] **Step 1: Create src/utils/serialize.ts**
 
 ```typescript
-// zotero-bridge/src/utils/serialize.ts
+// zotron/src/utils/serialize.ts
 
 /** Convert a Zotero.Item to a plain JSON object suitable for API response. */
 export function serializeItem(item: Zotero.Item): Record<string, any> {
@@ -337,7 +337,7 @@ export function serializeCollection(col: Zotero.Collection): Record<string, any>
 - [ ] **Step 2: Create src/server.ts (JSON-RPC router)**
 
 ```typescript
-// zotero-bridge/src/server.ts
+// zotron/src/server.ts
 
 type HandlerFn = (params: any) => Promise<any>;
 type HandlerMap = Record<string, HandlerFn>;
@@ -427,14 +427,14 @@ export function createEndpointHandler() {
 
 /** Register the endpoint with Zotero's HTTP server. */
 export function registerEndpoint() {
-  Zotero.Server.Endpoints["/zotero-bridge/rpc"] = createEndpointHandler();
-  Zotero.log("[ZoteroBridge] JSON-RPC endpoint registered at /zotero-bridge/rpc");
+  Zotero.Server.Endpoints["/zotron/rpc"] = createEndpointHandler();
+  Zotero.log("[Zotron] JSON-RPC endpoint registered at /zotron/rpc");
 }
 
 /** Unregister the endpoint. */
 export function unregisterEndpoint() {
-  delete Zotero.Server.Endpoints["/zotero-bridge/rpc"];
-  Zotero.log("[ZoteroBridge] JSON-RPC endpoint unregistered");
+  delete Zotero.Server.Endpoints["/zotron/rpc"];
+  Zotero.log("[Zotron] JSON-RPC endpoint unregistered");
 }
 
 /** List all registered methods (for introspection). */
@@ -446,7 +446,7 @@ export function getRegisteredMethods(): string[] {
 - [ ] **Step 3: Create src/hooks.ts**
 
 ```typescript
-// zotero-bridge/src/hooks.ts
+// zotron/src/hooks.ts
 import { registerEndpoint, unregisterEndpoint } from "./server";
 
 // Handler imports — will be added as we implement each handler file
@@ -474,14 +474,14 @@ export function onMainWindowUnload(_win: Window) {
 - [ ] **Step 4: Create src/index.ts (entry point)**
 
 ```typescript
-// zotero-bridge/src/index.ts
+// zotron/src/index.ts
 import { onStartup, onShutdown, onMainWindowLoad, onMainWindowUnload } from "./hooks";
 
 // Export hooks for bootstrap.js to call
 if (typeof Zotero !== "undefined") {
-  const id = "zotero-bridge@diamondrill";
-  if (!Zotero.ZoteroBridge) {
-    Zotero.ZoteroBridge = {
+  const id = "zotron@diamondrill";
+  if (!Zotero.Zotron) {
+    Zotero.Zotron = {
       hooks: { onStartup, onShutdown, onMainWindowLoad, onMainWindowUnload },
       data: { initialized: false },
     };
@@ -492,7 +492,7 @@ if (typeof Zotero !== "undefined") {
 - [ ] **Step 5: Verify TypeScript compiles**
 
 ```bash
-cd zotero-bridge && npx tsc --noEmit
+cd zotron && npx tsc --noEmit
 ```
 
 Expected: no errors (may have Zotero global warnings which is fine since zotero-types provides them at runtime).
@@ -500,8 +500,8 @@ Expected: no errors (may have Zotero global warnings which is fine since zotero-
 - [ ] **Step 6: Commit**
 
 ```bash
-git add zotero-bridge/src/
-git commit -m "feat(zotero-bridge): JSON-RPC router, response utils, lifecycle hooks"
+git add zotron/src/
+git commit -m "feat(zotron): JSON-RPC router, response utils, lifecycle hooks"
 ```
 
 ---
@@ -509,13 +509,13 @@ git commit -m "feat(zotero-bridge): JSON-RPC router, response utils, lifecycle h
 ## Task 3: system.* Handlers (9 methods)
 
 **Files:**
-- Create: `zotero-bridge/src/handlers/system.ts`
-- Modify: `zotero-bridge/src/hooks.ts` (add import)
+- Create: `zotron/src/handlers/system.ts`
+- Modify: `zotron/src/hooks.ts` (add import)
 
 - [ ] **Step 1: Create src/handlers/system.ts**
 
 ```typescript
-// zotero-bridge/src/handlers/system.ts
+// zotron/src/handlers/system.ts
 import { registerHandlers, getRegisteredMethods } from "../server";
 
 registerHandlers("system", {
@@ -611,13 +611,13 @@ import "./handlers/system";
 - [ ] **Step 3: Build and install for manual testing**
 
 ```bash
-cd zotero-bridge && npm run build
+cd zotron && npm run build
 ```
 
 Install the generated .xpi into Zotero (drag to Add-ons window), then test:
 
 ```bash
-curl -s http://localhost:23119/zotero-bridge/rpc \
+curl -s http://localhost:23119/zotron/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"system.ping","params":{},"id":1}'
 ```
@@ -625,7 +625,7 @@ curl -s http://localhost:23119/zotero-bridge/rpc \
 Expected: `{"jsonrpc":"2.0","result":{"status":"ok","timestamp":"..."},"id":1}`
 
 ```bash
-curl -s http://localhost:23119/zotero-bridge/rpc \
+curl -s http://localhost:23119/zotron/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"system.version","params":{},"id":1}'
 ```
@@ -635,8 +635,8 @@ Expected: `{"jsonrpc":"2.0","result":{"zotero":"7.x.x","plugin":"1.0.0","methods
 - [ ] **Step 4: Commit**
 
 ```bash
-git add zotero-bridge/src/handlers/system.ts zotero-bridge/src/hooks.ts
-git commit -m "feat(zotero-bridge): system.* handlers (ping, version, libraries, sync)"
+git add zotron/src/handlers/system.ts zotron/src/hooks.ts
+git commit -m "feat(zotron): system.* handlers (ping, version, libraries, sync)"
 ```
 
 ---
@@ -644,13 +644,13 @@ git commit -m "feat(zotero-bridge): system.* handlers (ping, version, libraries,
 ## Task 4: items.* Core CRUD (7 methods)
 
 **Files:**
-- Create: `zotero-bridge/src/handlers/items.ts`
-- Modify: `zotero-bridge/src/hooks.ts` (add import)
+- Create: `zotron/src/handlers/items.ts`
+- Modify: `zotron/src/hooks.ts` (add import)
 
 - [ ] **Step 1: Create src/handlers/items.ts with core CRUD**
 
 ```typescript
-// zotero-bridge/src/handlers/items.ts
+// zotron/src/handlers/items.ts
 import { registerHandlers } from "../server";
 import { serializeItem } from "../utils/serialize";
 
@@ -927,9 +927,9 @@ import "./handlers/items";
 - [ ] **Step 3: Build and test**
 
 ```bash
-cd zotero-bridge && npm run build
+cd zotron && npm run build
 # Reload plugin in Zotero, then:
-curl -s http://localhost:23119/zotero-bridge/rpc \
+curl -s http://localhost:23119/zotron/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"items.getRecent","params":{"limit":3},"id":1}'
 ```
@@ -937,8 +937,8 @@ curl -s http://localhost:23119/zotero-bridge/rpc \
 - [ ] **Step 4: Commit**
 
 ```bash
-git add zotero-bridge/src/handlers/items.ts zotero-bridge/src/hooks.ts
-git commit -m "feat(zotero-bridge): items.* handlers (18 methods - CRUD, DOI, duplicates, related)"
+git add zotron/src/handlers/items.ts zotron/src/hooks.ts
+git commit -m "feat(zotron): items.* handlers (18 methods - CRUD, DOI, duplicates, related)"
 ```
 
 ---
@@ -946,13 +946,13 @@ git commit -m "feat(zotero-bridge): items.* handlers (18 methods - CRUD, DOI, du
 ## Task 5: search.* Handlers (8 methods)
 
 **Files:**
-- Create: `zotero-bridge/src/handlers/search.ts`
-- Modify: `zotero-bridge/src/hooks.ts`
+- Create: `zotron/src/handlers/search.ts`
+- Modify: `zotron/src/hooks.ts`
 
 - [ ] **Step 1: Create src/handlers/search.ts**
 
 ```typescript
-// zotero-bridge/src/handlers/search.ts
+// zotron/src/handlers/search.ts
 import { registerHandlers } from "../server";
 import { serializeItem } from "../utils/serialize";
 
@@ -1076,9 +1076,9 @@ import "./handlers/search";
 - [ ] **Step 3: Build and test**
 
 ```bash
-cd zotero-bridge && npm run build
+cd zotron && npm run build
 # Reload, then:
-curl -s http://localhost:23119/zotero-bridge/rpc \
+curl -s http://localhost:23119/zotron/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"search.quick","params":{"query":"经济","limit":5},"id":1}'
 ```
@@ -1086,8 +1086,8 @@ curl -s http://localhost:23119/zotero-bridge/rpc \
 - [ ] **Step 4: Commit**
 
 ```bash
-git add zotero-bridge/src/handlers/search.ts zotero-bridge/src/hooks.ts
-git commit -m "feat(zotero-bridge): search.* handlers (quick, advanced, fulltext, tag, identifier, saved)"
+git add zotron/src/handlers/search.ts zotron/src/hooks.ts
+git commit -m "feat(zotron): search.* handlers (quick, advanced, fulltext, tag, identifier, saved)"
 ```
 
 ---
@@ -1095,13 +1095,13 @@ git commit -m "feat(zotero-bridge): search.* handlers (quick, advanced, fulltext
 ## Task 6: collections.* Handlers (12 methods)
 
 **Files:**
-- Create: `zotero-bridge/src/handlers/collections.ts`
-- Modify: `zotero-bridge/src/hooks.ts`
+- Create: `zotron/src/handlers/collections.ts`
+- Modify: `zotron/src/hooks.ts`
 
 - [ ] **Step 1: Create src/handlers/collections.ts**
 
 ```typescript
-// zotero-bridge/src/handlers/collections.ts
+// zotron/src/handlers/collections.ts
 import { registerHandlers } from "../server";
 import { serializeCollection, serializeItem } from "../utils/serialize";
 
@@ -1238,12 +1238,12 @@ registerHandlers("collections", {
 
 ```bash
 # Add import "./handlers/collections"; to hooks.ts
-cd zotero-bridge && npm run build
-curl -s http://localhost:23119/zotero-bridge/rpc \
+cd zotron && npm run build
+curl -s http://localhost:23119/zotron/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"collections.tree","params":{},"id":1}'
-git add zotero-bridge/src/handlers/collections.ts zotero-bridge/src/hooks.ts
-git commit -m "feat(zotero-bridge): collections.* handlers (12 methods - CRUD, tree, items)"
+git add zotron/src/handlers/collections.ts zotron/src/hooks.ts
+git commit -m "feat(zotron): collections.* handlers (12 methods - CRUD, tree, items)"
 ```
 
 ---
@@ -1251,12 +1251,12 @@ git commit -m "feat(zotero-bridge): collections.* handlers (12 methods - CRUD, t
 ## Task 7: tags.* Handlers (6 methods)
 
 **Files:**
-- Create: `zotero-bridge/src/handlers/tags.ts`
+- Create: `zotron/src/handlers/tags.ts`
 
 - [ ] **Step 1: Create src/handlers/tags.ts**
 
 ```typescript
-// zotero-bridge/src/handlers/tags.ts
+// zotron/src/handlers/tags.ts
 import { registerHandlers } from "../server";
 
 registerHandlers("tags", {
@@ -1331,9 +1331,9 @@ registerHandlers("tags", {
 
 ```bash
 # Add import "./handlers/tags"; to hooks.ts
-cd zotero-bridge && npm run build
-git add zotero-bridge/src/handlers/tags.ts zotero-bridge/src/hooks.ts
-git commit -m "feat(zotero-bridge): tags.* handlers (list, add, remove, rename, delete, batch)"
+cd zotron && npm run build
+git add zotron/src/handlers/tags.ts zotron/src/hooks.ts
+git commit -m "feat(zotron): tags.* handlers (list, add, remove, rename, delete, batch)"
 ```
 
 ---
@@ -1341,12 +1341,12 @@ git commit -m "feat(zotero-bridge): tags.* handlers (list, add, remove, rename, 
 ## Task 8: attachments.* Handlers (7 methods)
 
 **Files:**
-- Create: `zotero-bridge/src/handlers/attachments.ts`
+- Create: `zotron/src/handlers/attachments.ts`
 
 - [ ] **Step 1: Create src/handlers/attachments.ts**
 
 ```typescript
-// zotero-bridge/src/handlers/attachments.ts
+// zotron/src/handlers/attachments.ts
 import { registerHandlers } from "../server";
 import { serializeItem } from "../utils/serialize";
 
@@ -1449,9 +1449,9 @@ registerHandlers("attachments", {
 
 ```bash
 # Add import "./handlers/attachments"; to hooks.ts
-cd zotero-bridge && npm run build
-git add zotero-bridge/src/handlers/attachments.ts zotero-bridge/src/hooks.ts
-git commit -m "feat(zotero-bridge): attachments.* handlers (list, fulltext, outline, add, findPDF)"
+cd zotron && npm run build
+git add zotron/src/handlers/attachments.ts zotron/src/hooks.ts
+git commit -m "feat(zotron): attachments.* handlers (list, fulltext, outline, add, findPDF)"
 ```
 
 ---
@@ -1459,12 +1459,12 @@ git commit -m "feat(zotero-bridge): attachments.* handlers (list, fulltext, outl
 ## Task 9: notes.* Handlers (6 methods)
 
 **Files:**
-- Create: `zotero-bridge/src/handlers/notes.ts`
+- Create: `zotron/src/handlers/notes.ts`
 
 - [ ] **Step 1: Create src/handlers/notes.ts**
 
 ```typescript
-// zotero-bridge/src/handlers/notes.ts
+// zotron/src/handlers/notes.ts
 import { registerHandlers } from "../server";
 
 registerHandlers("notes", {
@@ -1585,9 +1585,9 @@ registerHandlers("notes", {
 
 ```bash
 # Add import "./handlers/notes"; to hooks.ts
-cd zotero-bridge && npm run build
-git add zotero-bridge/src/handlers/notes.ts zotero-bridge/src/hooks.ts
-git commit -m "feat(zotero-bridge): notes.* handlers (get, create, update, search, annotations)"
+cd zotron && npm run build
+git add zotron/src/handlers/notes.ts zotron/src/hooks.ts
+git commit -m "feat(zotron): notes.* handlers (get, create, update, search, annotations)"
 ```
 
 ---
@@ -1595,12 +1595,12 @@ git commit -m "feat(zotero-bridge): notes.* handlers (get, create, update, searc
 ## Task 10: export.* Handlers (6 methods)
 
 **Files:**
-- Create: `zotero-bridge/src/handlers/export.ts`
+- Create: `zotron/src/handlers/export.ts`
 
 - [ ] **Step 1: Create src/handlers/export.ts**
 
 ```typescript
-// zotero-bridge/src/handlers/export.ts
+// zotron/src/handlers/export.ts
 import { registerHandlers } from "../server";
 
 async function exportItems(ids: number[], translatorID: string): Promise<string> {
@@ -1675,13 +1675,13 @@ registerHandlers("export", {
 
 ```bash
 # Add import "./handlers/export"; to hooks.ts
-cd zotero-bridge && npm run build
-curl -s http://localhost:23119/zotero-bridge/rpc \
+cd zotron && npm run build
+curl -s http://localhost:23119/zotron/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"system.version","params":{},"id":1}'
 # Should show methods: 60+
-git add zotero-bridge/src/handlers/export.ts zotero-bridge/src/hooks.ts
-git commit -m "feat(zotero-bridge): export.* handlers (bibtex, csl-json, ris, csv, bibliography, citationKey)"
+git add zotron/src/handlers/export.ts zotron/src/hooks.ts
+git commit -m "feat(zotron): export.* handlers (bibtex, csl-json, ris, csv, bibliography, citationKey)"
 ```
 
 ---
@@ -1689,13 +1689,13 @@ git commit -m "feat(zotero-bridge): export.* handlers (bibtex, csl-json, ris, cs
 ## Task 11: Chinese Name Utility
 
 **Files:**
-- Create: `zotero-bridge/src/utils/chinese-name.ts`
-- Create: `zotero-bridge/test/chinese-name.test.ts`
+- Create: `zotron/src/utils/chinese-name.ts`
+- Create: `zotron/test/chinese-name.test.ts`
 
 - [ ] **Step 1: Write test for chinese-name.ts**
 
 ```typescript
-// zotero-bridge/test/chinese-name.test.ts
+// zotron/test/chinese-name.test.ts
 import { expect } from "chai";
 import { splitChineseName } from "../src/utils/chinese-name";
 
@@ -1733,7 +1733,7 @@ describe("splitChineseName", () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd zotero-bridge && npx mocha test/chinese-name.test.ts --require ts-node/register
+cd zotron && npx mocha test/chinese-name.test.ts --require ts-node/register
 ```
 
 Expected: FAIL — module not found.
@@ -1741,7 +1741,7 @@ Expected: FAIL — module not found.
 - [ ] **Step 3: Implement chinese-name.ts**
 
 ```typescript
-// zotero-bridge/src/utils/chinese-name.ts
+// zotron/src/utils/chinese-name.ts
 
 const COMPOUND_SURNAMES = [
   "欧阳", "太史", "端木", "上官", "司马", "东方", "独孤", "南宫", "万俟", "闻人",
@@ -1791,7 +1791,7 @@ export function splitChineseName(name: string): { lastName: string; firstName: s
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
-cd zotero-bridge && npx mocha test/chinese-name.test.ts --require ts-node/register
+cd zotron && npx mocha test/chinese-name.test.ts --require ts-node/register
 ```
 
 Expected: 7 passing.
@@ -1799,8 +1799,8 @@ Expected: 7 passing.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add zotero-bridge/src/utils/chinese-name.ts zotero-bridge/test/chinese-name.test.ts
-git commit -m "feat(zotero-bridge): Chinese name splitting with 84 compound surnames"
+git add zotron/src/utils/chinese-name.ts zotron/test/chinese-name.test.ts
+git commit -m "feat(zotron): Chinese name splitting with 84 compound surnames"
 ```
 
 ---
@@ -1821,8 +1821,8 @@ git commit -m "feat(zotero-bridge): Chinese name splitting with 84 compound surn
 ```json
 // .claude/skills/zotero-plugin/.claude-plugin/plugin.json
 {
-  "name": "zotero-bridge",
-  "description": "Zotero Bridge - search, manage, and export academic papers via CLI",
+  "name": "zotron",
+  "description": "Zotron - search, manage, and export academic papers via CLI",
   "version": "1.0.0",
   "author": { "name": "diamondrill" },
   "keywords": ["zotero", "academic", "citations", "bibliography"]
@@ -1833,7 +1833,7 @@ git commit -m "feat(zotero-bridge): Chinese name splitting with 84 compound surn
 
 ```bash
 #!/usr/bin/env bash
-# Zotero Bridge CLI - thin wrapper over JSON-RPC HTTP endpoint
+# Zotron CLI - thin wrapper over JSON-RPC HTTP endpoint
 # Usage: zotero-cli <method> [json_params]
 # Examples:
 #   zotero-cli system.ping
@@ -1842,11 +1842,11 @@ git commit -m "feat(zotero-bridge): Chinese name splitting with 84 compound surn
 #   zotero-cli export.bibliography '{"ids":[12345],"style":"gb-t-7714-2015"}'
 set -euo pipefail
 
-ZOTERO_BRIDGE_URL="${ZOTERO_BRIDGE_URL:-http://localhost:23119/zotero-bridge/rpc}"
+ZOTRON_RPC_URL="${ZOTRON_RPC_URL:-http://localhost:23119/zotron/rpc}"
 METHOD="${1:?Usage: zotero-cli <method> [json_params]}"
 PARAMS="${2:-{}}"
 
-RESPONSE=$(curl -sf "$ZOTERO_BRIDGE_URL" \
+RESPONSE=$(curl -sf "$ZOTRON_RPC_URL" \
   -H "Content-Type: application/json" \
   -d "{\"jsonrpc\":\"2.0\",\"method\":\"$METHOD\",\"params\":$PARAMS,\"id\":1}" 2>/dev/null) || {
   echo "Error: Cannot connect to Zotero. Is it running?" >&2
@@ -1875,7 +1875,7 @@ chmod +x .claude/skills/zotero-plugin/bin/zotero-cli
   "hooks": [
     {
       "event": "SessionStart",
-      "command": "curl -sf http://localhost:23119/zotero-bridge/rpc -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"system.ping\",\"params\":{},\"id\":1}' > /dev/null 2>&1 || echo '⚠️  Zotero Bridge not detected. Start Zotero with zotero-bridge.xpi installed.'"
+      "command": "curl -sf http://localhost:23119/zotron/rpc -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"system.ping\",\"params\":{},\"id\":1}' > /dev/null 2>&1 || echo '⚠️  Zotron not detected. Start Zotero with zotron.xpi installed.'"
     }
   ]
 }
@@ -2093,7 +2093,7 @@ git commit -m "feat(zotero-plugin): Claude Code plugin with CLI, skills, and age
 - [ ] **Step 1: Verify all handler imports in hooks.ts**
 
 ```typescript
-// zotero-bridge/src/hooks.ts — final version
+// zotron/src/hooks.ts — final version
 import { registerEndpoint, unregisterEndpoint } from "./server";
 import "./handlers/system";
 import "./handlers/items";
@@ -2119,10 +2119,10 @@ export function onMainWindowUnload(_win: Window) {}
 - [ ] **Step 2: Build production XPI**
 
 ```bash
-cd zotero-bridge && npm run build
+cd zotron && npm run build
 ```
 
-Expected: `.scaffold/build/zotero-bridge.xpi` created.
+Expected: `.scaffold/build/zotron.xpi` created.
 
 - [ ] **Step 3: Install in Zotero**
 
@@ -2160,7 +2160,7 @@ zotero-cli system.libraryStats
 
 ```bash
 git add -A
-git commit -m "feat(zotero-bridge): Phase 1 complete - 60 JSON-RPC methods + CLI + Claude Code plugin"
+git commit -m "feat(zotron): Phase 1 complete - 60 JSON-RPC methods + CLI + Claude Code plugin"
 ```
 
 ---

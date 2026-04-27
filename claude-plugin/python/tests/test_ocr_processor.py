@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 
-from zotero_bridge.ocr.processor import OCRProcessor
+from zotron.ocr.processor import OCRProcessor
 
 
 # ---------------------------------------------------------------------------

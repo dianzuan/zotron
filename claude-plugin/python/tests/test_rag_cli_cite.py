@@ -1,4 +1,4 @@
-"""Tests for `zotero-rag cite` subcommand."""
+"""Tests for `zotron-rag cite` subcommand."""
 import json
 import sys
 from unittest.mock import patch, MagicMock
@@ -7,9 +7,9 @@ import pytest
 
 
 def test_cite_prints_json_array_of_citations(tmp_path, capsys):
-    """`zotero-rag cite <query> --collection X --output json` prints JSON array."""
-    from zotero_bridge.rag.cli import main as rag_main
-    from zotero_bridge.rag.search import VectorStore
+    """`zotron-rag cite <query> --collection X --output json` prints JSON array."""
+    from zotron.rag.cli import main as rag_main
+    from zotron.rag.search import VectorStore
 
     store_dir = tmp_path / "store"
     store_dir.mkdir()
@@ -21,14 +21,14 @@ def test_cite_prints_json_array_of_citations(tmp_path, capsys):
     store_path = store_dir / "test.json"
     store.save(store_path)
 
-    with patch("zotero_bridge.rag.cli._store_path") as mock_path, \
-         patch("zotero_bridge.rag.cli._build_embedder") as mock_eb:
+    with patch("zotron.rag.cli._store_path") as mock_path, \
+         patch("zotron.rag.cli._build_embedder") as mock_eb:
         mock_path.return_value = store_path
         mock_emb = MagicMock()
         mock_emb.embed.return_value = [1.0, 0.0]
         mock_eb.return_value = mock_emb
 
-        argv = ["zotero-rag", "cite", "answer", "--collection", "test", "--output", "json"]
+        argv = ["zotron-rag", "cite", "answer", "--collection", "test", "--output", "json"]
         with patch.object(sys, "argv", argv):
             try:
                 rag_main()
@@ -46,15 +46,15 @@ def test_cite_prints_json_array_of_citations(tmp_path, capsys):
 
 def test_cite_missing_index_errors_clearly(tmp_path, capsys):
     """If no index file exists for the collection, command exits non-zero with hint."""
-    from zotero_bridge.rag.cli import main as rag_main
+    from zotron.rag.cli import main as rag_main
 
     nonexistent = tmp_path / "nope.json"
-    with patch("zotero_bridge.rag.cli._store_path") as mock_path, \
-         patch("zotero_bridge.rag.cli._build_embedder") as mock_eb:
+    with patch("zotron.rag.cli._store_path") as mock_path, \
+         patch("zotron.rag.cli._build_embedder") as mock_eb:
         mock_path.return_value = nonexistent
         mock_eb.return_value = MagicMock()
 
-        argv = ["zotero-rag", "cite", "q", "--collection", "missing"]
+        argv = ["zotron-rag", "cite", "q", "--collection", "missing"]
         with patch.object(sys, "argv", argv):
             with pytest.raises(SystemExit) as e:
                 rag_main()

@@ -1,12 +1,12 @@
 # RPC method reference
 
-All RPC methods exposed by the `zotero-bridge` XPI, callable via:
+All RPC methods exposed by the `zotron` XPI, callable via:
 
 ```bash
-zotero-bridge rpc <namespace>.<method> '<json-params>'
+zotron rpc <namespace>.<method> '<json-params>'
 ```
 
-Or directly over HTTP at `POST http://localhost:23119/zotero-bridge/rpc` with a JSON-RPC 2.0 envelope.
+Or directly over HTTP at `POST http://localhost:23119/zotron/rpc` with a JSON-RPC 2.0 envelope.
 
 ## Namespace summary
 

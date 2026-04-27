@@ -1,9 +1,9 @@
 import { defineConfig } from "zotero-plugin-scaffold";
 
 export default defineConfig({
-  name: "Zotero Bridge",
-  id: "zotero-bridge@diamondrill",
-  namespace: "ZoteroBridge",
+  name: "Zotron",
+  id: "zotron@diamondrill",
+  namespace: "Zotron",
   source: ["src", "addon"],
   logLevel: "DEBUG" as any,
   server: {
@@ -14,12 +14,12 @@ export default defineConfig({
   } as any,
   build: {
     prefs: {
-      prefix: "extensions.zoterobridge",
+      prefix: "extensions.zotron",
     },
     esbuildOptions: [
       {
         entryPoints: ["src/index.ts"],
-        outfile: ".scaffold/build/addon/content/scripts/zotero-bridge.js",
+        outfile: ".scaffold/build/addon/content/scripts/zotron.js",
         bundle: true,
         target: "firefox115",
       },

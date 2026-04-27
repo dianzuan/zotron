@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Zotero OCR — cloud OCR for Zotero collections
+# Usage: zotron-ocr --collection "数字经济" | zotron-ocr --item 12345
+set -euo pipefail
+exec uv run --project "${CLAUDE_PLUGIN_ROOT}/python" zotron-ocr "$@"

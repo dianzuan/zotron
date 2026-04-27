@@ -2,7 +2,7 @@
 import pytest
 import httpx
 
-from zotero_bridge.rag.embedder import (
+from zotron.rag.embedder import (
     OllamaEmbedder,
     CloudEmbedder,
     create_embedder,

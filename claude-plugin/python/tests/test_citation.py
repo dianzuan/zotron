@@ -1,7 +1,7 @@
-"""Tests for zotero_bridge.rag.citation."""
+"""Tests for zotron.rag.citation."""
 import json as _json
 
-from zotero_bridge.rag.citation import (
+from zotron.rag.citation import (
     Citation,
     format_citation_markdown,
     format_citation_json,
@@ -60,8 +60,8 @@ def test_format_citation_json_round_trip():
 def test_retrieve_with_citations_returns_citation_list(tmp_path):
     """retrieve_with_citations() loads a VectorStore and returns Citation objects."""
     from unittest.mock import MagicMock
-    from zotero_bridge.rag.citation import Citation, retrieve_with_citations
-    from zotero_bridge.rag.search import VectorStore
+    from zotron.rag.citation import Citation, retrieve_with_citations
+    from zotron.rag.search import VectorStore
 
     store = VectorStore(collection="test", collection_id=1, model="m")
     store.add_chunk(

@@ -1,4 +1,4 @@
-"""JSON-RPC client for Zotero Bridge XPI."""
+"""JSON-RPC client for Zotron XPI."""
 import httpx
 
 
@@ -20,7 +20,7 @@ class ZoteroRPC:
             resp = self._client.post(self.url, json=payload)
         except (httpx.ConnectError, httpx.ConnectTimeout):
             raise ConnectionError(
-                "Cannot connect to Zotero. Is it running with zotero-bridge plugin?"
+                "Cannot connect to Zotero. Is it running with zotron plugin?"
             )
         data = resp.json()
         if "error" in data:

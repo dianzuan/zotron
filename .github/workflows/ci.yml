@@ -50,11 +50,11 @@ jobs:
 
       - name: Lint (ruff)
         working-directory: claude-plugin/python
-        run: uv run ruff check zotero_bridge tests
+        run: uv run ruff check zotron tests
 
       - name: Type check (mypy)
         working-directory: claude-plugin/python
-        run: uv run mypy zotero_bridge --ignore-missing-imports
+        run: uv run mypy zotron --ignore-missing-imports
         continue-on-error: true  # mypy strictness phased in; not gate-blocking yet
 
       - name: Run pytest

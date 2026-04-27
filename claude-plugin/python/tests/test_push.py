@@ -1,11 +1,11 @@
-"""Tests for zotero_bridge.push.push_item."""
+"""Tests for zotron.push.push_item."""
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from zotero_bridge.errors import InvalidPDF
-from zotero_bridge.push import PushResult, push_item
+from zotron.errors import InvalidPDF
+from zotron.push import PushResult, push_item
 
 
 def _make_rpc(item_id: int = 1234, *, duplicate: int | None = None,
@@ -274,7 +274,7 @@ def test_collection_zero_means_no_collections_embedded():
 
 def test_wsl_path_translation_on_wsl(monkeypatch):
     """On WSL, _zotero_path should invoke wslpath and return the UNC form."""
-    from zotero_bridge.push import _zotero_path
+    from zotron.push import _zotero_path
     monkeypatch.setenv("WSL_DISTRO_NAME", "Ubuntu-24.04")
 
     def fake_run(cmd, **kw):
@@ -285,12 +285,12 @@ def test_wsl_path_translation_on_wsl(monkeypatch):
         assert cmd[:2] == ["wslpath", "-w"]
         return R()
 
-    monkeypatch.setattr("zotero_bridge.push.subprocess.run", fake_run)
+    monkeypatch.setattr("zotron.push.subprocess.run", fake_run)
     assert _zotero_path(Path("/tmp/x.pdf")) == "\\\\wsl.localhost\\Ubuntu-24.04\\tmp\\x.pdf"
 
 
 def test_path_passthrough_on_non_wsl(monkeypatch):
-    from zotero_bridge.push import _zotero_path
+    from zotron.push import _zotero_path
     monkeypatch.delenv("WSL_DISTRO_NAME", raising=False)
     # make _is_wsl() return False by pointing at a non-WSL /proc file
     monkeypatch.setattr(

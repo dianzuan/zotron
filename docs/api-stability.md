@@ -1,10 +1,10 @@
-# zotero-bridge API Stability
+# zotron API Stability
 
-This document is the contract for external consumers of zotero-bridge.
+This document is the contract for external consumers of zotron.
 
-## SDK (Python `zotero_bridge` package)
+## SDK (Python `zotron` package)
 
-The following symbols, importable from `zotero_bridge`, are **stable** —
+The following symbols, importable from `zotron`, are **stable** —
 breaking changes require a major-version bump:
 
 ### Core RPC client
@@ -19,7 +19,7 @@ breaking changes require a major-version bump:
 - `PushResult` — dataclass with fields `status: Literal["created", "updated", "skipped_duplicate", "failed"]`, `zotero_item_id: int | None`, `pdf_attached: bool`, `pdf_size_bytes: int`, `error: dict | None`; convenience property `pdf_size_kb: int`
 
 ### Errors
-- `ZoteroBridgeError` — base
+- `ZotronError` — base
 - `ZoteroUnavailable`
 - `CollectionNotFound`
 - `CollectionAmbiguous` (has `.candidates: list[dict]`)
@@ -34,16 +34,16 @@ breaking changes require a major-version bump:
 Anything not in this list is internal — modules with leading underscore
 (`_output`, `_paginate`) are explicitly private.
 
-## CLI (`zotero-bridge` binary)
+## CLI (`zotron` binary)
 
 ### Stable command surface
 
-All subcommands listed in `zotero-bridge --help` are stable. Their flags
+All subcommands listed in `zotron --help` are stable. Their flags
 are stable. New flags may be added; existing flags will not be removed
 or have their semantics changed without a major-version bump.
 
 The `rpc` escape hatch is stable as a calling pattern; the set of XPI
-methods reachable through it tracks the XPI version, not zotero-bridge.
+methods reachable through it tracks the XPI version, not zotron.
 
 ### Stable JSON envelope
 
@@ -92,7 +92,7 @@ response shape; CLI commands forward those responses verbatim.
 
 ## Versioning
 
-zotero-bridge follows semver:
+zotron follows semver:
 - **major** — anything in this document changes
 - **minor** — new methods / commands / flags
 - **patch** — fixes that don't change observable contract

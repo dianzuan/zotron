@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Zotron CLI — typed RPC client for the Zotron XPI
+# Usage: zotron ping | zotron search quick "..." | zotron rpc <method> '<json>'
+set -euo pipefail
+exec uv run --project "${CLAUDE_PLUGIN_ROOT}/python" zotron "$@"

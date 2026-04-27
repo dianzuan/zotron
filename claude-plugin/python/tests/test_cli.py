@@ -1,11 +1,11 @@
-"""Tests for zotero_bridge.cli."""
+"""Tests for zotron.cli."""
 import json
 from unittest.mock import patch, MagicMock
 
 import pytest
 from typer.testing import CliRunner
 
-from zotero_bridge.cli import app
+from zotron.cli import app
 
 
 runner = CliRunner()
@@ -15,7 +15,7 @@ runner = CliRunner()
 def mock_rpc():
     """Patch ZoteroRPC at the module level. Returns the MagicMock instance
     so individual tests can configure .call responses."""
-    with patch("zotero_bridge.cli.ZoteroRPC") as mock_cls:
+    with patch("zotron.cli.ZoteroRPC") as mock_cls:
         instance = MagicMock()
         mock_cls.return_value = instance
         yield instance
@@ -278,7 +278,7 @@ def test_push_collection_ambiguous(mock_rpc, tmp_path):
 
 
 def test_rpc_calls_method_with_params(mock_rpc):
-    """zotero-bridge rpc <method> <json> forwards to ZoteroRPC.call()."""
+    """zotron rpc <method> <json> forwards to ZoteroRPC.call()."""
     mock_rpc.call.return_value = {"itemKey": "ABC123"}
     result = runner.invoke(
         app,
@@ -378,7 +378,7 @@ def test_help_epilog_contains_examples():
         result = runner.invoke(app, argv)
         assert result.exit_code == 0, f"{argv} --help failed"
         assert "Examples:" in result.stdout, f"{argv} missing Examples section"
-        assert "zotero-bridge" in result.stdout, f"{argv} epilog missing example"
+        assert "zotron" in result.stdout, f"{argv} epilog missing example"
 
 
 def test_collections_list_table_output(mock_rpc):
@@ -484,7 +484,7 @@ def test_push_dry_run_does_not_call_push_item(mock_rpc, tmp_path):
         "itemType": "journalArticle",
         "title": "Attention is all you need",
     }))
-    with patch("zotero_bridge.cli.push_item") as mock_push:
+    with patch("zotron.cli.push_item") as mock_push:
         result = runner.invoke(
             app,
             ["push", str(paper_json), "--dry-run"],

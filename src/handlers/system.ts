@@ -4,7 +4,7 @@ import { registerHandlers, getRegisteredMethods } from "../server";
 
 export const systemHandlers = {
   async ping() { return { status: "ok", timestamp: new Date().toISOString() }; },
-  async version() { return { zotero: Zotero.version, plugin: "1.3.4", methods: getRegisteredMethods().length }; },
+  async version() { return { zotero: Zotero.version, plugin: "0.1.0", methods: getRegisteredMethods().length }; },
   async libraries() {
     const libs = Zotero.Libraries.getAll();
     return libs.map((lib: any) => ({ id: lib.id, type: lib.libraryType, name: lib.name, editable: lib.editable }));
@@ -12,7 +12,7 @@ export const systemHandlers = {
   async switchLibrary(params: { id: number }) {
     const lib = Zotero.Libraries.get(params.id);
     if (!lib) throw { code: -32602, message: `Library ${params.id} not found` };
-    Zotero.Prefs.set("extensions.zotero-bridge.lastLibraryID", params.id, true);
+    Zotero.Prefs.set("extensions.zotron.lastLibraryID", params.id, true);
     return { id: lib.id, name: lib.name };
   },
   async libraryStats(params: { id?: number }) {
@@ -63,7 +63,7 @@ export const systemHandlers = {
       const { AddonManager } = ChromeUtils.importESModule(
         "resource://gre/modules/AddonManager.sys.mjs",
       );
-      const addon = await AddonManager.getAddonByID("zotero-bridge@diamondrill");
+      const addon = await AddonManager.getAddonByID("zotron@diamondrill");
       if (addon) await addon.reload();
     }, 100);
     return { status: "reloading" };

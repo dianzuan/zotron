@@ -78,7 +78,7 @@ def retrieve_with_citations(
     top_k : int
         Maximum number of citations to return.
     """
-    from zotero_bridge.rag.search import VectorStore  # local import avoids cycles
+    from zotron.rag.search import VectorStore  # local import avoids cycles
 
     store = VectorStore.load(store_path)
     qvec = embedder.embed(query)

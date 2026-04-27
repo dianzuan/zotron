@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 diamondrill
-// zotero-bridge/src/handlers/collections.ts
+// zotron/src/handlers/collections.ts
 import { registerHandlers } from "../server";
 import { serializeCollection, serializeItem } from "../utils/serialize";
 import { requireCollection } from "../utils/guards";

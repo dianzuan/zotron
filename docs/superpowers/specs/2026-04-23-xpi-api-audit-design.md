@@ -1,6 +1,6 @@
 # XPI API Audit & Unified PRD — Design
 
-**Goal:** Audit every Zotero API call in the zotero-bridge XPI handlers, cross-reference with Zotero 8 official documentation, and produce a derived API Product Requirements Document (PRD) that captures:
+**Goal:** Audit every Zotero API call in the zotron XPI handlers, cross-reference with Zotero 8 official documentation, and produce a derived API Product Requirements Document (PRD) that captures:
 
 1. Which Zotero conventions we adopt verbatim (parameter names, return shapes, method signatures, error semantics).
 2. The JSON-RPC boundary conventions we add on top (JSON serialization rules, error code classes, what we normalize vs pass through).
@@ -27,7 +27,7 @@ The user's diagnosis: the root cause isn't bibliography specifically — it's th
 
 **Out of scope:**
 
-- CLI Python side (`claude-plugin/python/zotero_bridge/cli.py`) — already audited 2026-04-23.
+- CLI Python side (`claude-plugin/python/zotron/cli.py`) — already audited 2026-04-23.
 - Zotero 6/7 back-compat — the XPI targets 6.999+ per manifest; Zotero 8 is the deployment reality. Findings will focus on Zotero 8 correctness.
 - Feature requests (new methods, new commands) — only existing surface.
 

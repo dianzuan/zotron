@@ -1,10 +1,10 @@
-"""`zotero-bridge` command-line interface — thin wrapper over zotero_bridge.
+"""`zotron` command-line interface — thin wrapper over zotron.
 
 Exposes agent-friendly commands:
-  zotero-bridge ping                       — health check
-  zotero-bridge push <json> --pdf --collection
-  zotero-bridge collections list|tree
-  zotero-bridge find-pdfs --collection NAME
+  zotron ping                       — health check
+  zotron push <json> --pdf --collection
+  zotron collections list|tree
+  zotron find-pdfs --collection NAME
 """
 from __future__ import annotations
 
@@ -15,21 +15,21 @@ from pathlib import Path
 
 import typer
 
-from zotero_bridge._output import emit
-from zotero_bridge.errors import (
+from zotron._output import emit
+from zotron.errors import (
     CollectionAmbiguous,
     CollectionNotFound,
     InvalidPDF,
-    ZoteroBridgeError,
+    ZotronError,
 )
-from zotero_bridge.push import push_item, resolve_collection
-from zotero_bridge.rpc import ZoteroRPC
+from zotron.push import push_item, resolve_collection
+from zotron.rpc import ZoteroRPC
 
-DEFAULT_URL = "http://127.0.0.1:23119/zotero-bridge/rpc"
+DEFAULT_URL = "http://127.0.0.1:23119/zotron/rpc"
 
 app = typer.Typer(
-    name="zotero-bridge",
-    help="Python client + CLI for the Zotero Bridge XPI.\n\n"
+    name="zotron",
+    help="Python client + CLI for the Zotron XPI.\n\n"
          "For fetching CNKI papers end-to-end, use `cnki export`.",
     no_args_is_help=True,
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -58,7 +58,7 @@ def _rpc_or_die(rpc: ZoteroRPC, method: str, params: dict | None = None):
     try:
         resp = rpc.call(method, params) if params is not None else rpc.call(method)
     except ConnectionError:
-        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotero-bridge")
+        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotron")
     except RuntimeError as e:
         # rpc.call raises RuntimeError for XPI-side JSON-RPC errors
         _die("RPC_ERROR", str(e))
@@ -106,29 +106,29 @@ def _resolve_or_die(rpc: ZoteroRPC, name_or_id: str) -> int:
     except CollectionNotFound as e:
         _die("COLLECTION_NOT_FOUND", str(e))
     except ConnectionError:
-        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotero-bridge")
+        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotron")
 
 
 @app.command(
     "ping",
-    epilog="Examples:\n\n    zotero-bridge ping\n\n    zotero-bridge ping --url http://localhost:23119/zotero-bridge/rpc",
+    epilog="Examples:\n\n    zotron ping\n\n    zotron ping --url http://localhost:23119/zotron/rpc",
 )
 def ping(
     url: str = typer.Option(DEFAULT_URL, "--url"),
 ) -> None:
-    """Check that Zotero is running with the zotero-bridge XPI enabled."""
+    """Check that Zotero is running with the zotron XPI enabled."""
     rpc = _new_rpc(url)
     try:
         resp = rpc.call("system.ping")
     except ConnectionError:
         _die("ZOTERO_UNAVAILABLE",
-             f"Cannot connect to zotero-bridge at {url}. Is Zotero running?")
+             f"Cannot connect to zotron at {url}. Is Zotero running?")
     typer.echo(json.dumps(resp))
 
 
 @app.command(
     "rpc",
-    epilog="Examples:\n\n    zotero-bridge rpc system.ping\n\n    zotero-bridge rpc items.get '{\"id\":12345}'\n\n    zotero-bridge rpc tags.add '{\"itemId\":12345,\"tags\":[\"已读\"]}'",
+    epilog="Examples:\n\n    zotron rpc system.ping\n\n    zotron rpc items.get '{\"id\":12345}'\n\n    zotron rpc tags.add '{\"itemId\":12345,\"tags\":[\"已读\"]}'",
 )
 def rpc_command(
     method: str = typer.Argument(..., help="JSON-RPC method name, e.g. 'items.get'"),
@@ -136,7 +136,7 @@ def rpc_command(
         "{}",
         help="JSON-encoded params object, e.g. '{\"id\":123}'. Defaults to '{}'.",
     ),
-    url: str = typer.Option(DEFAULT_URL, "--url", help="zotero-bridge RPC endpoint URL."),
+    url: str = typer.Option(DEFAULT_URL, "--url", help="zotron RPC endpoint URL."),
     jq_filter: str | None = typer.Option(None, "--jq", help="jq filter expression"),
     paginate_flag: bool = typer.Option(
         False, "--paginate",
@@ -155,11 +155,11 @@ def rpc_command(
 
     rpc = _new_rpc(url)
     if paginate_flag:
-        from zotero_bridge._paginate import paginate
+        from zotron._paginate import paginate
         try:
             result = paginate(rpc, method, params, page_size=page_size)
         except ConnectionError:
-            _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotero-bridge")
+            _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotron")
         except RuntimeError as e:
             _die("RPC_ERROR", str(e))
     else:
@@ -170,7 +170,7 @@ def rpc_command(
 
 @collections_app.command(
     "list",
-    epilog="Examples:\n\n    zotero-bridge collections list",
+    epilog="Examples:\n\n    zotron collections list",
 )
 def collections_list(
     url: str = typer.Option(DEFAULT_URL, "--url"),
@@ -183,13 +183,13 @@ def collections_list(
     try:
         resp = rpc.call("collections.list")
     except ConnectionError:
-        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotero-bridge")
+        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotron")
     _emit_or_die(resp or [], output=output, jq_filter=jq_filter)
 
 
 @collections_app.command(
     "tree",
-    epilog="Examples:\n\n    zotero-bridge collections tree",
+    epilog="Examples:\n\n    zotron collections tree",
 )
 def collections_tree(
     url: str = typer.Option(DEFAULT_URL, "--url"),
@@ -200,13 +200,13 @@ def collections_tree(
     try:
         resp = rpc.call("collections.tree")
     except ConnectionError:
-        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotero-bridge")
+        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotron")
     _emit_or_die(resp or {}, jq_filter=jq_filter)
 
 
 @collections_app.command(
     "rename",
-    epilog="Examples:\n\n    zotero-bridge collections rename \"typo-案例库\" \"案例库\"",
+    epilog="Examples:\n\n    zotron collections rename \"typo-案例库\" \"案例库\"",
 )
 def collections_rename(
     old_name: str = typer.Argument(..., help="Current collection name (or numeric ID)."),
@@ -230,7 +230,7 @@ def collections_rename(
 
 @collections_app.command(
     "create",
-    epilog="Examples:\n\n    zotero-bridge collections create \"2026-AI\"\n\n    zotero-bridge collections create \"Reading List\" --parent \"2026-AI\"",
+    epilog="Examples:\n\n    zotron collections create \"2026-AI\"\n\n    zotron collections create \"Reading List\" --parent \"2026-AI\"",
 )
 def collections_create(
     name: str = typer.Argument(..., help="Collection name."),
@@ -258,7 +258,7 @@ def collections_create(
 
 @collections_app.command(
     "delete",
-    epilog="Examples:\n\n    zotero-bridge collections delete \"TempCollection\"",
+    epilog="Examples:\n\n    zotron collections delete \"TempCollection\"",
 )
 def collections_delete(
     name_or_id: str = typer.Argument(..., help="Collection name (fuzzy) or numeric ID."),
@@ -279,7 +279,7 @@ def collections_delete(
 
 @collections_app.command(
     "add-items",
-    epilog="Examples:\n\n    zotero-bridge collections add-items \"2026-AI\" 12345 12346",
+    epilog="Examples:\n\n    zotron collections add-items \"2026-AI\" 12345 12346",
 )
 def collections_add_items(
     collection: str = typer.Argument(..., help="Target collection name or ID."),
@@ -301,7 +301,7 @@ def collections_add_items(
 
 @collections_app.command(
     "remove-items",
-    epilog="Examples:\n\n    zotero-bridge collections remove-items \"2026-AI\" 12345",
+    epilog="Examples:\n\n    zotron collections remove-items \"2026-AI\" 12345",
 )
 def collections_remove_items(
     collection: str = typer.Argument(..., help="Collection name or ID."),
@@ -323,7 +323,7 @@ def collections_remove_items(
 
 @app.command(
     "push",
-    epilog="Examples:\n\n    cat item.json | zotero-bridge push - --pdf paper.pdf --collection \"Reading List\"\n\n    zotero-bridge push paper.json --on-duplicate update",
+    epilog="Examples:\n\n    cat item.json | zotron push - --pdf paper.pdf --collection \"Reading List\"\n\n    zotron push paper.json --on-duplicate update",
 )
 def push(
     json_file: str = typer.Argument(
@@ -387,7 +387,7 @@ def push(
             on_duplicate=on_duplicate,
         )
     except ConnectionError:
-        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotero-bridge")
+        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotron")
     except InvalidPDF as e:
         _die("INVALID_PDF", str(e))
     except CollectionAmbiguous as e:
@@ -402,7 +402,7 @@ def push(
         raise typer.Exit(code=1)
     except CollectionNotFound as e:
         _die("COLLECTION_NOT_FOUND", str(e))
-    except ZoteroBridgeError as e:
+    except ZotronError as e:
         _die("ZOTERO_ERROR", str(e))
 
     typer.echo(json.dumps(asdict(result)))
@@ -410,7 +410,7 @@ def push(
 
 @app.command(
     "find-pdfs",
-    epilog="Examples:\n\n    zotero-bridge find-pdfs --collection \"2026-AI\"\n\n    zotero-bridge find-pdfs --collection \"2026-AI\" --limit 20",
+    epilog="Examples:\n\n    zotron find-pdfs --collection \"2026-AI\"\n\n    zotron find-pdfs --collection \"2026-AI\" --limit 20",
 )
 def find_pdfs(
     collection: str = typer.Option(..., "--collection", help="Collection name or ID."),
@@ -428,7 +428,7 @@ def find_pdfs(
     try:
         coll_id = resolve_collection(rpc, collection)
     except ConnectionError:
-        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotero-bridge")
+        _die("ZOTERO_UNAVAILABLE", "Cannot connect to zotron")
     except CollectionAmbiguous as e:
         typer.echo(json.dumps({
             "ok": False,
@@ -501,7 +501,7 @@ app.add_typer(items_app, name="items")
 
 @items_app.command(
     "get",
-    epilog="Examples:\n\n    zotero-bridge items get 12345",
+    epilog="Examples:\n\n    zotron items get 12345",
 )
 def items_get(
     item_id: int = typer.Argument(...),
@@ -517,7 +517,7 @@ def items_get(
 
 @items_app.command(
     "add-by-doi",
-    epilog="Examples:\n\n    zotero-bridge items add-by-doi 10.1038/nature12373\n\n    zotero-bridge items add-by-doi 10.1038/nature12373 --collection \"2026-AI\"",
+    epilog="Examples:\n\n    zotron items add-by-doi 10.1038/nature12373\n\n    zotron items add-by-doi 10.1038/nature12373 --collection \"2026-AI\"",
 )
 def items_add_by_doi(
     doi: str = typer.Argument(...),
@@ -540,7 +540,7 @@ def items_add_by_doi(
 
 @items_app.command(
     "add-by-isbn",
-    epilog="Examples:\n\n    zotero-bridge items add-by-isbn 9780262035613",
+    epilog="Examples:\n\n    zotron items add-by-isbn 9780262035613",
 )
 def items_add_by_isbn(
     isbn: str = typer.Argument(...),
@@ -563,7 +563,7 @@ def items_add_by_isbn(
 
 @items_app.command(
     "add-by-url",
-    epilog="Examples:\n\n    zotero-bridge items add-by-url https://arxiv.org/abs/1706.03762",
+    epilog="Examples:\n\n    zotron items add-by-url https://arxiv.org/abs/1706.03762",
 )
 def items_add_by_url(
     page_url: str = typer.Argument(...),
@@ -586,7 +586,7 @@ def items_add_by_url(
 
 @items_app.command(
     "trash",
-    epilog="Examples:\n\n    zotero-bridge items trash 12345",
+    epilog="Examples:\n\n    zotron items trash 12345",
 )
 def items_trash(
     item_id: int = typer.Argument(...),
@@ -603,7 +603,7 @@ def items_trash(
 
 @items_app.command(
     "restore",
-    epilog="Examples:\n\n    zotero-bridge items restore 12345",
+    epilog="Examples:\n\n    zotron items restore 12345",
 )
 def items_restore(
     item_id: int = typer.Argument(...),
@@ -620,7 +620,7 @@ def items_restore(
 
 @items_app.command(
     "find-duplicates",
-    epilog="Examples:\n\n    zotero-bridge items find-duplicates",
+    epilog="Examples:\n\n    zotron items find-duplicates",
 )
 def items_find_duplicates(
     url: str = typer.Option(DEFAULT_URL, "--url"),
@@ -633,7 +633,7 @@ def items_find_duplicates(
 
 @items_app.command(
     "merge-duplicates",
-    epilog="Examples:\n\n    zotero-bridge items merge-duplicates 12345 12346 12347",
+    epilog="Examples:\n\n    zotron items merge-duplicates 12345 12346 12347",
 )
 def items_merge_duplicates(
     ids: list[int] = typer.Argument(..., help="First id is the master; rest merged into it."),
@@ -663,7 +663,7 @@ app.add_typer(search_app, name="search")
 
 @search_app.command(
     "quick",
-    epilog="Examples:\n\n    zotero-bridge search quick \"transformer\" --limit 10",
+    epilog="Examples:\n\n    zotron search quick \"transformer\" --limit 10",
 )
 def search_quick(
     query: str = typer.Argument(...),
@@ -681,7 +681,7 @@ def search_quick(
 
 @search_app.command(
     "fulltext",
-    epilog="Examples:\n\n    zotero-bridge search fulltext \"attention is all you need\"",
+    epilog="Examples:\n\n    zotron search fulltext \"attention is all you need\"",
 )
 def search_fulltext(
     query: str = typer.Argument(...),
@@ -699,7 +699,7 @@ def search_fulltext(
 
 @search_app.command(
     "by-identifier",
-    epilog="Examples:\n\n    zotero-bridge search by-identifier --doi 10.1038/nature12373\n\n    zotero-bridge search by-identifier --isbn 9780262035613",
+    epilog="Examples:\n\n    zotron search by-identifier --doi 10.1038/nature12373\n\n    zotron search by-identifier --isbn 9780262035613",
 )
 def search_by_identifier(
     doi: str | None = typer.Option(None, "--doi"),
@@ -735,7 +735,7 @@ app.add_typer(tags_app, name="tags")
 
 @tags_app.command(
     "list",
-    epilog="Examples:\n\n    zotero-bridge tags list --limit 100",
+    epilog="Examples:\n\n    zotron tags list --limit 100",
 )
 def tags_list(
     limit: int = typer.Option(200, "--limit"),
@@ -751,7 +751,7 @@ def tags_list(
 
 @tags_app.command(
     "rename",
-    epilog="Examples:\n\n    zotero-bridge tags rename \"todo\" \"to-read\"",
+    epilog="Examples:\n\n    zotron tags rename \"todo\" \"to-read\"",
 )
 def tags_rename(
     old: str = typer.Argument(...),
@@ -769,7 +769,7 @@ def tags_rename(
 
 @tags_app.command(
     "delete",
-    epilog="Examples:\n\n    zotero-bridge tags delete \"outdated-tag\"",
+    epilog="Examples:\n\n    zotron tags delete \"outdated-tag\"",
 )
 def tags_delete(
     tag: str = typer.Argument(...),
@@ -807,7 +807,7 @@ def _export_fmt(method: str, ids: list[int], url: str) -> None:
 
 @export_app.command(
     "bibtex",
-    epilog="Examples:\n\n    zotero-bridge export bibtex 12345 12346",
+    epilog="Examples:\n\n    zotron export bibtex 12345 12346",
 )
 def export_bibtex(
     ids: list[int] = typer.Argument(...),
@@ -819,7 +819,7 @@ def export_bibtex(
 
 @export_app.command(
     "ris",
-    epilog="Examples:\n\n    zotero-bridge export ris 12345",
+    epilog="Examples:\n\n    zotron export ris 12345",
 )
 def export_ris(
     ids: list[int] = typer.Argument(...),
@@ -831,7 +831,7 @@ def export_ris(
 
 @export_app.command(
     "csl-json",
-    epilog="Examples:\n\n    zotero-bridge export csl-json 12345",
+    epilog="Examples:\n\n    zotron export csl-json 12345",
 )
 def export_csl_json(
     ids: list[int] = typer.Argument(...),
@@ -843,7 +843,7 @@ def export_csl_json(
 
 @export_app.command(
     "bibliography",
-    epilog="Examples:\n\n    zotero-bridge export bibliography 12345 --style apa\n\n    zotero-bridge export bibliography 12345 --html",
+    epilog="Examples:\n\n    zotron export bibliography 12345 --style apa\n\n    zotron export bibliography 12345 --html",
 )
 def export_bibliography(
     ids: list[int] = typer.Argument(...),
@@ -881,7 +881,7 @@ app.add_typer(system_app, name="system")
 
 @system_app.command(
     "version",
-    epilog="Examples:\n\n    zotero-bridge system version",
+    epilog="Examples:\n\n    zotron system version",
 )
 def system_version(
     url: str = typer.Option(DEFAULT_URL, "--url"),
@@ -893,7 +893,7 @@ def system_version(
 
 @system_app.command(
     "sync",
-    epilog="Examples:\n\n    zotero-bridge system sync",
+    epilog="Examples:\n\n    zotron system sync",
 )
 def system_sync(
     url: str = typer.Option(DEFAULT_URL, "--url"),
@@ -904,7 +904,7 @@ def system_sync(
 
 @system_app.command(
     "libraries",
-    epilog="Examples:\n\n    zotero-bridge system libraries",
+    epilog="Examples:\n\n    zotron system libraries",
 )
 def system_libraries(
     url: str = typer.Option(DEFAULT_URL, "--url"),

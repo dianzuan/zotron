@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 diamondrill
-// zotero-bridge/src/handlers/export.ts
+// zotron/src/handlers/export.ts
 import { registerHandlers } from "../server";
 import { wrapTranslatorError } from "../utils/translator-error";
 

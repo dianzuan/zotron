@@ -3,7 +3,7 @@
 import { onStartup, onShutdown, onMainWindowLoad, onMainWindowUnload } from "./hooks";
 
 // Register on Zotero global (always available in Zotero sandbox)
-(Zotero as any).ZoteroBridge = {
+(Zotero as any).Zotron = {
   hooks: { onStartup, onShutdown, onMainWindowLoad, onMainWindowUnload },
   data: { initialized: false },
 };

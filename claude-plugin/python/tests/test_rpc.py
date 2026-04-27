@@ -3,7 +3,7 @@ import json
 import pytest
 import httpx
 
-from zotero_bridge.rpc import ZoteroRPC
+from zotron.rpc import ZoteroRPC
 
 
 def make_rpc(responses: list[dict]) -> ZoteroRPC:

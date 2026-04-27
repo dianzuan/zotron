@@ -8,10 +8,10 @@ Usually you need to search first, then export:
 
 ```bash
 # 1. Find the papers
-zotero-bridge rpc search.quick '{"query":"数字经济","limit":10}'
+zotron rpc search.quick '{"query":"数字经济","limit":10}'
 
 # 2. Note the IDs from results, then export
-zotero-bridge export bibliography 10 13 16
+zotron export bibliography 10 13 16
 ```
 
 ## Formats
@@ -26,20 +26,20 @@ zotero-bridge export bibliography 10 13 16
 ## GB/T 7714 (中文学术默认)
 
 ```bash
-zotero-bridge export bibliography 10 13 16
+zotron export bibliography 10 13 16
 ```
 
 Returns both `html` and `text` versions. Use `text` for plain output.
 
 For the author-date variant instead of the default numeric:
 ```bash
-zotero-bridge rpc export.bibliography '{"ids":[10],"style":"http://www.zotero.org/styles/gb-t-7714-2015-author-date"}'
+zotron rpc export.bibliography '{"ids":[10],"style":"http://www.zotero.org/styles/gb-t-7714-2015-author-date"}'
 ```
 
 ## BibTeX
 
 ```bash
-zotero-bridge export bibtex 10 13 16
+zotron export bibtex 10 13 16
 ```
 
 ## Citation key
@@ -47,7 +47,7 @@ zotero-bridge export bibtex 10 13 16
 Look up a paper's Better-BibTeX citation key (an `items.*` identity attribute) for building LaTeX `\cite{}` references:
 
 ```bash
-zotero-bridge rpc items.citationKey '{"id":10}'
+zotron rpc items.citationKey '{"id":10}'
 ```
 
 ## Present to user

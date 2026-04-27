@@ -1,26 +1,26 @@
-"""Zotero Bridge — Python client + CLI for the Zotero Bridge XPI.
+"""Zotron — Python client + CLI for the Zotron XPI.
 
 Exposes a source-agnostic `push_item()` API that any scholar-database
 plugin (cnki-plugin, arxiv-plugin, ...) can use to push item metadata +
 PDF attachments into Zotero via JSON-RPC over localhost:23119.
 """
 
-from zotero_bridge.rpc import ZoteroRPC
-from zotero_bridge.push import (
+from zotron.rpc import ZoteroRPC
+from zotron.push import (
     PushResult,
     check_pdf_magic,
     find_duplicate,
     push_item,
     resolve_collection,
 )
-from zotero_bridge.errors import (
-    ZoteroBridgeError,
+from zotron.errors import (
+    ZotronError,
     ZoteroUnavailable,
     CollectionNotFound,
     CollectionAmbiguous,
     InvalidPDF,
 )
-from zotero_bridge.rag.citation import (
+from zotron.rag.citation import (
     Citation,
     retrieve_with_citations,
     format_citation_markdown,
@@ -34,7 +34,7 @@ __all__ = [
     "resolve_collection",
     "find_duplicate",
     "check_pdf_magic",
-    "ZoteroBridgeError",
+    "ZotronError",
     "ZoteroUnavailable",
     "CollectionNotFound",
     "CollectionAmbiguous",

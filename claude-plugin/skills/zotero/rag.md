@@ -6,19 +6,19 @@ Find relevant paragraphs across papers in a Zotero collection using semantic sea
 
 ```bash
 # 1. First, OCR the collection (if not done)
-zotero-ocr --collection "数字经济"
+zotron-ocr --collection "数字经济"
 
 # 2. Build the search index
-zotero-rag index --collection "数字经济"
+zotron-rag index --collection "数字经济"
 
 # 3. Search for relevant paragraphs
-zotero-rag search --collection "数字经济" "就业效应的异质性分析方法"
+zotron-rag search --collection "数字经济" "就业效应的异质性分析方法"
 ```
 
 ## Search
 
 ```bash
-zotero-rag search --collection "数字经济" "数字经济对劳动力市场的影响机制"
+zotron-rag search --collection "数字经济" "数字经济对劳动力市场的影响机制"
 ```
 
 Returns JSON array of relevant paragraphs with score, paper title, authors, section name.
@@ -26,8 +26,8 @@ Returns JSON array of relevant paragraphs with score, paper title, authors, sect
 ## Index management
 
 ```bash
-zotero-rag status --collection "数字经济"
-zotero-rag index --collection "数字经济" --rebuild
+zotron-rag status --collection "数字经济"
+zotron-rag index --collection "数字经济" --rebuild
 ```
 
 ## Why RAG saves tokens

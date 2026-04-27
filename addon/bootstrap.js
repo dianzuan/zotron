@@ -8,26 +8,26 @@ async function startup({ id, version, resourceURI, rootURI }, reason) {
   ].getService(Components.interfaces.amIAddonManagerStartup);
   var manifestURI = Services.io.newURI(rootURI + "manifest.json");
   chromeHandle = aomStartup.registerChrome(manifestURI, [
-    ["content", "zotero-bridge", rootURI + "content/"],
+    ["content", "zotron", rootURI + "content/"],
   ]);
 
   const ctx = { rootURI };
   ctx._globalThis = ctx;
 
   Services.scriptloader.loadSubScript(
-    `${rootURI}/content/scripts/zotero-bridge.js`,
+    `${rootURI}/content/scripts/zotron.js`,
     ctx,
   );
-  Zotero.ZoteroBridge.data.rootURI = rootURI;
-  await Zotero.ZoteroBridge.hooks.onStartup();
+  Zotero.Zotron.data.rootURI = rootURI;
+  await Zotero.Zotron.hooks.onStartup();
 }
 
 async function onMainWindowLoad({ window }, reason) {
-  await Zotero.ZoteroBridge?.hooks.onMainWindowLoad(window);
+  await Zotero.Zotron?.hooks.onMainWindowLoad(window);
 }
 
 async function onMainWindowUnload({ window }, reason) {
-  await Zotero.ZoteroBridge?.hooks.onMainWindowUnload(window);
+  await Zotero.Zotron?.hooks.onMainWindowUnload(window);
 }
 
 async function shutdown({ id, version, resourceURI, rootURI }, reason) {
@@ -35,7 +35,7 @@ async function shutdown({ id, version, resourceURI, rootURI }, reason) {
     return;
   }
 
-  await Zotero.ZoteroBridge?.hooks.onShutdown();
+  await Zotero.Zotron?.hooks.onShutdown();
 
   if (chromeHandle) {
     chromeHandle.destruct();

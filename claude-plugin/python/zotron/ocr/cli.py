@@ -1,4 +1,4 @@
-"""CLI entry point for zotero-ocr command."""
+"""CLI entry point for zotron-ocr command."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ import argparse
 import json
 import sys
 
-from zotero_bridge.config import load_config
-from zotero_bridge.rpc import ZoteroRPC
-from zotero_bridge.ocr.engine import create_engine
-from zotero_bridge.ocr.processor import OCRProcessor
+from zotron.config import load_config
+from zotron.rpc import ZoteroRPC
+from zotron.ocr.engine import create_engine
+from zotron.ocr.processor import OCRProcessor
 
 
 def _make_processor(cfg: dict) -> OCRProcessor:
@@ -72,7 +72,7 @@ def cmd_process(args: argparse.Namespace, cfg: dict) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="zotero-ocr",
+        prog="zotron-ocr",
         description="OCR PDFs in Zotero and write results as Notes.",
     )
     parser.add_argument("--collection", help="Collection name to process")

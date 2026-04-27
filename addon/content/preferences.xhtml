@@ -5,7 +5,7 @@
   <label><html:h2>OCR 设置</html:h2></label>
   <hbox align="center">
     <label value="OCR 引擎:" style="width: 80px;" />
-    <menulist id="zotero-bridge-ocr-provider" preference="ocr.provider">
+    <menulist id="zotron-ocr-provider" preference="ocr.provider">
       <menupopup>
         <menuitem label="智谱 GLM-OCR" value="glm" />
         <menuitem label="阿里通义千问 Qwen-VL-OCR" value="qwen" />
@@ -15,21 +15,21 @@
   </hbox>
   <hbox align="center">
     <label value="API Key:" style="width: 80px;" />
-    <html:input id="zotero-bridge-ocr-apikey" type="password"
+    <html:input id="zotron-ocr-apikey" type="password"
                 preference="ocr.apiKey" placeholder="填入 API Key"
                 style="flex: 1;"></html:input>
-    <button id="zotero-bridge-ocr-test" label="测试" />
+    <button id="zotron-ocr-test" label="测试" />
   </hbox>
-  <html:p id="zotero-bridge-ocr-status" style="font-size: 11px; color: #888; margin: 2px 0 0 84px;"></html:p>
+  <html:p id="zotron-ocr-status" style="font-size: 11px; color: #888; margin: 2px 0 0 84px;"></html:p>
   <hbox align="center">
     <label value="模型:" style="width: 80px;" />
-    <html:input id="zotero-bridge-ocr-model" type="text"
+    <html:input id="zotron-ocr-model" type="text"
                 preference="ocr.model" readonly="readonly"
                 style="flex: 1; color: #888;"></html:input>
   </hbox>
   <hbox align="center">
     <label value="API URL:" style="width: 80px;" />
-    <html:input id="zotero-bridge-ocr-apiurl" type="text"
+    <html:input id="zotron-ocr-apiurl" type="text"
                 preference="ocr.apiUrl" readonly="readonly"
                 style="flex: 1; color: #888;"></html:input>
   </hbox>
@@ -39,7 +39,7 @@
   <label><html:h2>Embedding 设置</html:h2></label>
   <hbox align="center">
     <label value="引擎:" style="width: 80px;" />
-    <menulist id="zotero-bridge-emb-provider" preference="embedding.provider">
+    <menulist id="zotron-emb-provider" preference="embedding.provider">
       <menupopup>
         <menuitem label="Ollama 本地" value="ollama" />
         <menuitem label="智谱" value="zhipu" />
@@ -51,21 +51,21 @@
   </hbox>
   <hbox align="center">
     <label value="API Key:" style="width: 80px;" />
-    <html:input id="zotero-bridge-emb-apikey" type="password"
+    <html:input id="zotron-emb-apikey" type="password"
                 preference="embedding.apiKey" placeholder="Ollama 本地无需填写"
                 style="flex: 1;"></html:input>
-    <button id="zotero-bridge-emb-test" label="测试" />
+    <button id="zotron-emb-test" label="测试" />
   </hbox>
-  <html:p id="zotero-bridge-emb-status" style="font-size: 11px; color: #888; margin: 2px 0 0 84px;"></html:p>
+  <html:p id="zotron-emb-status" style="font-size: 11px; color: #888; margin: 2px 0 0 84px;"></html:p>
   <hbox align="center">
     <label value="模型:" style="width: 80px;" />
-    <html:input id="zotero-bridge-emb-model" type="text"
+    <html:input id="zotron-emb-model" type="text"
                 preference="embedding.model" readonly="readonly"
                 style="flex: 1; color: #888;"></html:input>
   </hbox>
   <hbox align="center">
     <label value="API URL:" style="width: 80px;" />
-    <html:input id="zotero-bridge-emb-apiurl" type="text"
+    <html:input id="zotron-emb-apiurl" type="text"
                 preference="embedding.apiUrl" readonly="readonly"
                 style="flex: 1; color: #888;"></html:input>
   </hbox>

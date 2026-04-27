@@ -1,16 +1,16 @@
 {
-  "name": "zotero-bridge",
-  "version": "1.4.0",
+  "name": "zotron",
+  "version": "0.1.0",
   "description": "Typed JSON-RPC 2.0 bridge for Zotero 8 — exposes 77 internal API methods over HTTP for external tools, agents, and CLIs.",
   "license": "AGPL-3.0-or-later",
   "author": "diamondrill",
-  "homepage": "https://github.com/dianzuan/zotero-bridge",
+  "homepage": "https://github.com/dianzuan/zotron",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dianzuan/zotero-bridge.git"
+    "url": "https://github.com/dianzuan/zotron.git"
   },
   "bugs": {
-    "url": "https://github.com/dianzuan/zotero-bridge/issues"
+    "url": "https://github.com/dianzuan/zotron/issues"
   },
   "keywords": [
     "zotero",

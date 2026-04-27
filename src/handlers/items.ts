@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 diamondrill
-// zotero-bridge/src/handlers/items.ts
+// zotron/src/handlers/items.ts
 import { registerHandlers } from "../server";
 import { splitChineseName, CJK_REGEX } from "../utils/chinese-name";
 import { serializeItem } from "../utils/serialize";

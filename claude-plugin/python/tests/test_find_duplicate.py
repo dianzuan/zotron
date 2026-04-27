@@ -1,7 +1,7 @@
-"""Tests for zotero_bridge.push.find_duplicate."""
+"""Tests for zotron.push.find_duplicate."""
 from unittest.mock import MagicMock
 
-from zotero_bridge.push import find_duplicate
+from zotron.push import find_duplicate
 
 
 def _rpc_responses(**kwargs) -> MagicMock:

@@ -1,7 +1,7 @@
 """Smoke test: top-level public API surface."""
 
 def test_citation_api_exposed():
-    from zotero_bridge import (
+    from zotron import (
         Citation,
         retrieve_with_citations,
         format_citation_markdown,
@@ -14,11 +14,11 @@ def test_citation_api_exposed():
 
 
 def test_citation_api_in_dunder_all():
-    import zotero_bridge
+    import zotron
     for name in (
         "Citation",
         "retrieve_with_citations",
         "format_citation_markdown",
         "format_citation_json",
     ):
-        assert name in zotero_bridge.__all__, f"{name} missing from __all__"
+        assert name in zotron.__all__, f"{name} missing from __all__"

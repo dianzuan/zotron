@@ -7,9 +7,9 @@ from pathlib import Path
 
 import markdown as md
 
-from zotero_bridge.collections import find_by_name as _find_collection_by_name
-from zotero_bridge.ocr.engine import OCREngine
-from zotero_bridge.rpc import ZoteroRPC
+from zotron.collections import find_by_name as _find_collection_by_name
+from zotron.ocr.engine import OCREngine
+from zotron.rpc import ZoteroRPC
 
 
 class OCRProcessor:

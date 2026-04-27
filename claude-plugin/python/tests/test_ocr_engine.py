@@ -2,7 +2,7 @@
 
 import pytest
 
-from zotero_bridge.ocr.engine import (
+from zotron.ocr.engine import (
     CustomEngine,
     GLMEngine,
     QwenOCREngine,

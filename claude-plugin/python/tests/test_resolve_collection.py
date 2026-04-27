@@ -1,10 +1,10 @@
-"""Tests for zotero_bridge.push.resolve_collection."""
+"""Tests for zotron.push.resolve_collection."""
 from unittest.mock import MagicMock
 
 import pytest
 
-from zotero_bridge.errors import CollectionAmbiguous, CollectionNotFound
-from zotero_bridge.push import resolve_collection
+from zotron.errors import CollectionAmbiguous, CollectionNotFound
+from zotron.push import resolve_collection
 
 
 def _rpc_with(collections: list[dict], selected: dict | None = None) -> MagicMock:

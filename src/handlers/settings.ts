@@ -3,7 +3,7 @@
 import { registerHandlers } from "../server";
 import { findUnknownKey } from "../utils/settings-validate";
 
-const PREF_PREFIX = "extensions.zotero-bridge.";
+const PREF_PREFIX = "extensions.zotron.";
 
 const SETTINGS_KEYS = [
   "ocr.provider",      // glm | qwen | ernie | custom

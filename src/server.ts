@@ -57,11 +57,11 @@ export function createEndpointHandler() {
 }
 
 export function registerEndpoint() {
-  Zotero.Server.Endpoints["/zotero-bridge/rpc"] = createEndpointHandler();
-  Zotero.log("[ZoteroBridge] JSON-RPC endpoint registered at /zotero-bridge/rpc");
+  Zotero.Server.Endpoints["/zotron/rpc"] = createEndpointHandler();
+  Zotero.log("[Zotron] JSON-RPC endpoint registered at /zotron/rpc");
 }
 export function unregisterEndpoint() {
-  delete Zotero.Server.Endpoints["/zotero-bridge/rpc"];
+  delete Zotero.Server.Endpoints["/zotron/rpc"];
 }
 export function getRegisteredMethods(): string[] {
   return Object.keys(handlers).sort();
