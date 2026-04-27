@@ -6,7 +6,7 @@
 
 **Zotero 8 的强类型 JSON-RPC 2.0 桥**
 
-*把 Zotero 内部 77 个 API 方法通过 HTTP 暴露给 AI 智能体、命令行和外部工具。*
+*把 Zotero 内部 79 个 API 方法通过 HTTP 暴露给 AI 智能体、命令行和外部工具。*
 
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![CI](https://github.com/dianzuan/zotron/actions/workflows/ci.yml/badge.svg)](https://github.com/dianzuan/zotron/actions/workflows/ci.yml)
@@ -27,7 +27,7 @@ Zotron 是一个 [bootstrap-extension](https://www.zotero.org/support/dev/zotero
 ┌──────────────────────────┐         ┌─────────────────────────────┐
 │  你的工具/智能体          │         │  Zotero（装了本插件）        │
 │                          │         │                             │
-│  curl /zotron/rpc │ ──HTTP─▶│  77 个强类型 RPC 方法        │
+│  curl /zotron/rpc │ ──HTTP─▶│  79 个强类型 RPC 方法        │
 │  cnki-plugin 推送         │         │  • items.* (19)             │
 │  研究 agent              │         │  • collections.* (12)       │
 │  Better-BibTeX 消费者    │         │  • attachments.* (6)        │
@@ -59,7 +59,7 @@ Zotero 7 上线了官方 [Local API](https://www.zotero.org/support/dev/web_api/
 | 跟 `pyzotero` / Web-API 客户端开箱即用 | ✅ | ❌（自定义 RPC） |
 | 需要勾选"允许其他应用通讯" | 是 | **否**（plugin 端点绕过这个 gate） |
 
-Zotron 是 Zotero **内部 JS API** 的强类型 JSON-RPC 桥——插件自己用的那套接口，你和数据之间没有 Web-API schema 翻译层。9 个命名空间共 77 个方法，覆盖 CRUD + 搜索 + 导出 + 标签 + 同步 + system。
+Zotron 是 Zotero **内部 JS API** 的强类型 JSON-RPC 桥——插件自己用的那套接口，你和数据之间没有 Web-API schema 翻译层。10 个命名空间共 79 个方法，覆盖 CRUD + 搜索 + 导出 + 标签 + 同步 + RAG + system。
 
 Zotero 7 之前的几条绕路——直接读 SQLite（脆弱、跟版本走、写锁）、debug-server 后门 eval JS（不安全、不支持）、每个项目自己写一次性 bootstrap 插件（重复造轮子）——全是坏路径。Zotron 用一套稳定 typed surface 把它们替掉。
 
@@ -120,7 +120,7 @@ uv tool install "git+https://github.com/dianzuan/zotron.git#subdirectory=claude-
 
 zotron ping
 zotron search quick "数字经济" --limit 10
-zotron rpc items.get '{"id":12345}'    # escape hatch —— 覆盖全部 77 个方法
+zotron rpc items.get '{"id":12345}'    # escape hatch —— 覆盖全部 79 个方法
 ```
 
 `--jq` 过滤输出（仿 `gh api --jq`）；`--install-completion {bash|zsh|fish|powershell}` 装 shell 补全。SDK 稳定契约见 [`docs/api-stability.md`](docs/api-stability.md)。
@@ -145,7 +145,7 @@ curl -s -X POST http://localhost:23119/zotron/rpc \
 
 ## API 一览
 
-9 个命名空间共 77 个方法。完整规范见 [docs/superpowers/specs/2026-04-23-xpi-api-prd.md](docs/superpowers/specs/2026-04-23-xpi-api-prd.md)。
+10 个命名空间共 79 个方法。完整规范见 [docs/superpowers/specs/2026-04-23-xpi-api-prd.md](docs/superpowers/specs/2026-04-23-xpi-api-prd.md)。
 
 | 命名空间 | 方法数 | 干啥的 |
 |---|---|---|
@@ -184,7 +184,7 @@ zotron-rag cite "数字经济对就业的影响" --collection 数字经济 --out
 - 统一后的 OCR/parser blocks 存在 `<item-key>.zotron-blocks.jsonl`；
 - retrieval chunks 存在 `<item-key>.zotron-chunks.jsonl`；
 - vectors 和索引元数据存在 `<item-key>.zotron-embed.npz`；
-- retrieval hits 一行一个 JSON 对象，必须包含 `item_key`、`title`、`text`，并建议带上 `zotero_uri`、`chunk_id`、`block_ids`、`section_heading`、`query`、`score` 等 provenance 字段。
+- retrieval hits 一行一个 JSON 对象，必须包含 `item_key`、`title`、`text`，并建议带上 `zotero_uri`、`chunk_id`、`block_ids`、`section_heading`、`query`、`score` 等 provenance 字段。XPI 已暴露 `rag.searchHits` / `rag.searchCards` 做 Zotero-native chunk artifact 检索；`zotron-rag hits --zotero` 会调用这个 JSON-RPC backend。
 
 Markdown 可以作为派生的便利输出，但不能作为 OCR/RAG 的唯一 truth，因为它会丢 page、bbox、table、figure、provider 和 reading-order provenance。
 
@@ -214,7 +214,7 @@ npm run build && \
 
 - `ocr.*` —— 给未来的 `attachments.ocr` 方法
 - `embedding.*` —— 给未来的语义搜索 / 分块
-- `rag.*` —— 给未来的 `search.semantic` 方法
+- `rag.searchHits` / `rag.searchCards` —— 基于 Zotero 附件 chunk artifacts 的 retrieval hits
 
 当前 storage 和 retrieval contract 见 [`docs/2026-04-27-rag-ocr-roadmap.md`](docs/2026-04-27-rag-ocr-roadmap.md)。后续一等 RAG/OCR 实现应保留 provider raw 输出，normalize 成 blocks/chunks，并暴露 academic-zh 兼容的 retrieval hits，不能把 markdown 当作唯一 truth。
 

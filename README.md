@@ -6,7 +6,7 @@
 
 **Typed JSON-RPC 2.0 bridge for Zotero 8**
 
-*77 internal API methods over HTTP — for AI agents, CLIs, and external tools.*
+*79 internal API methods over HTTP — for AI agents, CLIs, and external tools.*
 
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![CI](https://github.com/dianzuan/zotron/actions/workflows/ci.yml/badge.svg)](https://github.com/dianzuan/zotron/actions/workflows/ci.yml)
@@ -27,7 +27,7 @@ Zotron is a [bootstrap-extension](https://www.zotero.org/support/dev/zotero_7_fo
 ┌──────────────────────────┐         ┌─────────────────────────────┐
 │  Your tool / agent       │         │  Zotero (with this plugin)  │
 │                          │         │                             │
-│  curl /zotron/rpc        │ ──HTTP─▶│  77 typed RPC methods       │
+│  curl /zotron/rpc        │ ──HTTP─▶│  79 typed RPC methods       │
 │  cnki-plugin push        │         │  • items.* (19)             │
 │  research agent          │         │  • collections.* (12)       │
 │  Better-BibTeX consumer  │         │  • attachments.* (6)        │
@@ -59,7 +59,7 @@ But the Local API is read-heavy and schema-locked to what `api.zotero.org` expos
 | Compatible with `pyzotero` / Web-API clients out-of-box | ✅ | ❌ (custom RPC) |
 | Requires the "Allow other apps" checkbox | yes | **no** (plugin endpoints bypass that gate) |
 
-Zotron is a typed JSON-RPC bridge to Zotero's **internal JS API** — the same surface plugins themselves use, with no Web-API schema translation layer between you and the data. 77 methods across 9 namespaces (CRUD + search + export + tags + sync + system).
+Zotron is a typed JSON-RPC bridge to Zotero's **internal JS API** — the same surface plugins themselves use, with no Web-API schema translation layer between you and the data. 79 methods across 10 namespaces (CRUD + search + export + tags + sync + RAG + system).
 
 Pre-Zotero-7 alternatives — vendoring a SQLite reader (fragile, write-locked, schema-versioned), `eval`-ing JS through the debug-server backdoor (insecure, unsupported), or hand-rolling a one-off bootstrap plugin per project (rebuilds the wheel) — are all bad. Zotron replaces them with one stable typed surface.
 
@@ -120,7 +120,7 @@ uv tool install "git+https://github.com/dianzuan/zotron.git#subdirectory=claude-
 
 zotron ping
 zotron search quick "transformer attention" --limit 10
-zotron rpc items.get '{"id":12345}'    # escape hatch — covers all 77 methods
+zotron rpc items.get '{"id":12345}'    # escape hatch — covers all 79 methods
 ```
 
 `--jq` filters output (`gh api --jq` style); `--install-completion {bash|zsh|fish|powershell}` enables shell completion. SDK contract: [`docs/api-stability.md`](docs/api-stability.md).
@@ -145,7 +145,7 @@ curl -s -X POST http://localhost:23119/zotron/rpc \
 
 ## API surface
 
-77 methods across 9 namespaces. Full conventions: [docs/superpowers/specs/2026-04-23-xpi-api-prd.md](docs/superpowers/specs/2026-04-23-xpi-api-prd.md).
+79 methods across 10 namespaces. Full conventions: [docs/superpowers/specs/2026-04-23-xpi-api-prd.md](docs/superpowers/specs/2026-04-23-xpi-api-prd.md).
 
 | Namespace | Methods | What it does |
 |---|---|---|
@@ -184,7 +184,7 @@ The 2026 RAG/OCR roadmap extends this toward Zotero-native artifacts and an acad
 - normalized OCR/parser blocks in `<item-key>.zotron-blocks.jsonl`;
 - retrieval chunks in `<item-key>.zotron-chunks.jsonl`;
 - vectors plus index metadata in `<item-key>.zotron-embed.npz`;
-- retrieval hits as one JSON object per line with required `item_key`, `title`, and `text`, plus provenance fields such as `zotero_uri`, `chunk_id`, `block_ids`, `section_heading`, `query`, and `score`.
+- retrieval hits as one JSON object per line with required `item_key`, `title`, and `text`, plus provenance fields such as `zotero_uri`, `chunk_id`, `block_ids`, `section_heading`, `query`, and `score`. The XPI exposes `rag.searchHits` / `rag.searchCards` for Zotero-native chunk artifact lookup; `zotron-rag hits --zotero` calls that JSON-RPC backend.
 
 Markdown is allowed as a derived convenience output, but it is not the source of truth for OCR/RAG because it loses page, bbox, table, figure, provider, and reading-order provenance.
 
@@ -214,7 +214,7 @@ Preference keys reserved in `SETTINGS_KEYS` (callable via `settings.set`); consu
 
 - `ocr.*` — for a future `attachments.ocr` method
 - `embedding.*` — semantic search / chunking
-- `rag.*` — for `search.semantic`
+- `rag.searchHits` / `rag.searchCards` — Zotero-native retrieval hits over attached chunk artifacts
 
 See [`docs/2026-04-27-rag-ocr-roadmap.md`](docs/2026-04-27-rag-ocr-roadmap.md) for the current storage and retrieval contract. First-class RAG/OCR work should preserve provider raw outputs, normalize to blocks/chunks, and expose academic-zh compatible retrieval hits without treating markdown as the only truth.
 

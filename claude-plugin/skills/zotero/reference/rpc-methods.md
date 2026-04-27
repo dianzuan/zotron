@@ -20,9 +20,10 @@ Or directly over HTTP at `POST http://localhost:23119/zotron/rpc` with a JSON-RP
 | `tags.*` | 6 | List, add, remove, rename, delete (cross-library) |
 | `export.*` | 5 | BibTeX / CSL-JSON / RIS / CSV / bibliography (CiteProc) |
 | `settings.*` | 4 | Plugin-side preferences (e.g. OCR provider, embedding model) |
+| `rag.*` | 2 | Zotero-native retrieval hits over attached OCR/RAG chunk artifacts |
 | `system.*` | 11 | Ping, version, libraries, switchLibrary, sync, currentCollection, `system.reload` (self-reload for dev) |
 
-Total: 77 methods.
+Total: 79 methods.
 
 ## items.*
 
@@ -129,6 +130,13 @@ Total: 77 methods.
 | `settings.set` | Write one plugin-side preference |
 | `settings.getAll` | Read all plugin-side preferences |
 | `settings.setAll` | Bulk-write plugin-side preferences |
+
+## rag.*
+
+| Method | Purpose |
+|---|---|
+| `rag.searchHits` | Return academic-zh retrieval hits from Zotero-attached `.zotron-chunks.jsonl` artifacts |
+| `rag.searchCards` | Compatibility alias for `rag.searchHits`; still returns span-level hits, not final paper cards |
 
 ## system.*
 

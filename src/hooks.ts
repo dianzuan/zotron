@@ -10,6 +10,7 @@ import "./handlers/attachments";
 import "./handlers/notes";
 import "./handlers/export";
 import "./handlers/settings";
+import "./handlers/rag";
 export async function onStartup() {
   registerEndpoint();
 

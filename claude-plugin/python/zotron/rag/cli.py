@@ -290,6 +290,9 @@ def cmd_hits(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
         cfg,
         artifacts_dir=getattr(args, "artifacts_dir", None),
         item_key=getattr(args, "item_key", None),
+        zotero=getattr(args, "zotero", False),
+        top_spans_per_item=getattr(args, "top_spans_per_item", None),
+        include_fulltext_spans=getattr(args, "include_fulltext_spans", False),
     )
 
 
@@ -366,7 +369,60 @@ def _emit_hits(hits: list[dict[str, Any]], output: str) -> None:
         print(json.dumps({"hits": hits, "total": len(hits)}, ensure_ascii=False, indent=2))
 
 
-def _run_hits(query: str, collection: str | None, output: str, top_k: int, cfg: dict[str, Any], *, artifacts_dir: str | None = None, item_key: str | None = None) -> None:
+def _run_zotero_hits(
+    query: str,
+    collection: str | None,
+    output: str,
+    top_k: int,
+    cfg: dict[str, Any],
+    *,
+    top_spans_per_item: int | None = None,
+    include_fulltext_spans: bool = False,
+) -> None:
+    if not collection:
+        print(json.dumps({"error": "--collection is required when --zotero is used"}), file=sys.stderr)
+        sys.exit(2)
+    rpc_url = cfg.get("zotero", {}).get("rpc_url", "http://localhost:23119/zotron/rpc")
+    rpc = ZoteroRPC(rpc_url)
+    payload = rpc.call(
+        "rag.searchHits",
+        {
+            "query": query,
+            "collection": collection,
+            "limit": top_k,
+            "top_spans_per_item": top_spans_per_item or 3,
+            "include_fulltext_spans": include_fulltext_spans,
+        },
+    )
+    hits = payload.get("hits", []) if isinstance(payload, dict) else []
+    _emit_hits(list(hits), output)
+
+
+def _run_hits(
+    query: str,
+    collection: str | None,
+    output: str,
+    top_k: int,
+    cfg: dict[str, Any],
+    *,
+    artifacts_dir: str | None = None,
+    item_key: str | None = None,
+    zotero: bool = False,
+    top_spans_per_item: int | None = None,
+    include_fulltext_spans: bool = False,
+) -> None:
+    if zotero:
+        _run_zotero_hits(
+            query,
+            collection,
+            output,
+            top_k,
+            cfg,
+            top_spans_per_item=top_spans_per_item,
+            include_fulltext_spans=include_fulltext_spans,
+        )
+        return
+
     if artifacts_dir:
         store = _artifact_vector_store(artifacts_dir, item_key)
         embedder = _build_embedder(cfg)
@@ -450,6 +506,9 @@ def main() -> None:
     p_hits.add_argument("--collection", help="Collection name")
     p_hits.add_argument("--artifacts-dir", help="Directory containing chunk and embedding artifacts")
     p_hits.add_argument("--item-key", help="Limit artifact search to one Zotero item key")
+    p_hits.add_argument("--zotero", action="store_true", help="Use Zotero XPI rag.searchHits JSON-RPC backend")
+    p_hits.add_argument("--top-spans-per-item", type=int, default=3, help="Maximum Zotero-backed hits per item")
+    p_hits.add_argument("--include-fulltext-spans", action="store_true", help="Ask Zotero backend to include fulltext fallback spans")
     p_hits.add_argument("--limit", "--top-k", dest="top_k", type=int, default=50, help="Maximum hits to emit")
     p_hits.add_argument("--output", choices=["json", "jsonl"], default="json", help="Output format")
 
@@ -486,6 +545,9 @@ def main() -> None:
             cfg,
             artifacts_dir=args.artifacts_dir,
             item_key=args.item_key,
+            zotero=args.zotero,
+            top_spans_per_item=args.top_spans_per_item,
+            include_fulltext_spans=args.include_fulltext_spans,
         )
         return
 
