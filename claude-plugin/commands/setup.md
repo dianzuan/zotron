@@ -1,5 +1,5 @@
 ---
-description: Set up Zotron — verify the XPI plugin is reachable on localhost:23119, semi-automatically install the bundled XPI into Zotero if missing.
+description: Set up Zotron — verify the XPI plugin is reachable on localhost:23119; if not, drop the bundled XPI into the user's Downloads folder and walk them through Zotero's "Install Add-on From File" flow.
 ---
 
 # /zotron:setup — Zotron bootstrap
@@ -10,9 +10,11 @@ Run this when the user has just installed the `zotron` Claude Code plugin and ne
 
 End state: `system.ping` over `localhost:23119/zotron/rpc` returns `{"pong": true, ...}` and the user can ask Claude to do real Zotero work.
 
-## What "semi-automatic" means
+## Why we don't fully automate the install
 
-The XPI ships bundled with the plugin at `${CLAUDE_PLUGIN_ROOT}/xpi/zotron.xpi`. We don't download anything from GitHub — we just hand that local file to Zotero, which pops its native install dialog. The user clicks **Install** once and restarts Zotero. No Tools → Plugins → ⚙ → Install From File hunt.
+We tried. Zotero 7+ does not accept XPI files via command line (`zotero.exe path/to.xpi` triggers data import, not plugin install — Zotero's CLI inherits Mozilla-toolkit flags but no `--install`), exposes no `zotero://install` URL handler, and no HTTP install endpoint on port 23119. Profile-side-loading via `<profile>/extensions/<id>.xpi` is documented but Zotero's startupCache routinely ignores newly-dropped files. Every "automatic" path is fragile.
+
+What we **can** reliably do: drop the bundled XPI into the user's actual Downloads folder (auto-detected, including drive relocations like `E:\Downloads`), then walk them through Zotero's native install dialog. One file pick, one restart.
 
 ## Procedure
 
@@ -36,16 +38,16 @@ curl -sf -X POST http://localhost:23119/zotron/rpc \
 ```
 
 - **OK** → bridge is live. Run `zotron ping` to print version, confirm to the user, stop.
-- **DOWN** → continue.
+- **DOWN** → continue. The XPI is missing or Zotero isn't running.
 
 ### 3. Confirm Zotero is running
 
-Ask the user: *"Is Zotero currently open?"*
+Ask the user: *"Is Zotero open?"*
 
 - **No** → tell them to start Zotero, wait ~5s, re-ping (step 2). If still DOWN → step 4.
-- **Yes** → assume the XPI is missing → step 4.
+- **Yes** → XPI isn't installed → step 4.
 
-### 4. Verify the bundled XPI exists
+### 4. Verify the bundled XPI is intact
 
 ```bash
 test -f "${CLAUDE_PLUGIN_ROOT}/xpi/zotron.xpi" && echo OK || echo BUNDLED_XPI_MISSING
@@ -54,75 +56,77 @@ test -f "${CLAUDE_PLUGIN_ROOT}/xpi/zotron.xpi" && echo OK || echo BUNDLED_XPI_MI
 If `BUNDLED_XPI_MISSING`, the plugin install is broken. Tell the user:
 > Reinstall the plugin: `/plugin uninstall zotron@zotron` then `/plugin install zotron@zotron`.
 
-### 5. Hand the XPI to Zotero (semi-auto install)
+### 5. Find the user's real Downloads folder and drop the XPI
 
-Detect the platform and launch Zotero with the bundled XPI. Zotero will open a native install dialog.
+Detect platform, resolve the actual Downloads path (handling drive relocation and OneDrive redirect on Windows), copy the bundled XPI there.
 
 ```bash
-XPI="${CLAUDE_PLUGIN_ROOT}/xpi/zotron.xpi"
+XPI_SRC="${CLAUDE_PLUGIN_ROOT}/xpi/zotron.xpi"
 
 case "$(uname -s)" in
   Darwin*)
-    # macOS — use `open -a` to launch Zotero with the file
-    open -a Zotero "$XPI"
-    echo LAUNCHED_MAC
+    DOWNLOADS="$HOME/Downloads"
+    DISPLAY_PATH="$DOWNLOADS/zotron.xpi"
     ;;
 
   Linux*)
     if grep -qi microsoft /proc/version 2>/dev/null && ! command -v zotero >/dev/null 2>&1; then
-      # WSL with Zotero on the Windows host — copy XPI to Windows %TEMP% (always
-      # under the user's profile, no hardcoded drive letter), then launch via cmd.exe.
-      WIN_TEMP=$(cmd.exe /c "echo %TEMP%" 2>/dev/null | tr -d '\r\n')
-      if [ -z "$WIN_TEMP" ]; then
-        echo NO_WIN_TEMP
-      else
-        WSL_TEMP=$(wslpath -u "$WIN_TEMP")
-        cp "$XPI" "$WSL_TEMP/zotron.xpi"
-        # cmd.exe expects backslash; the empty "" is the start-command title slot.
-        cmd.exe /c start "" "$WIN_TEMP\\zotron.xpi" 2>/dev/null
-        echo LAUNCHED_WSL
+      # WSL → Windows-host Zotero. Resolve the canonical Downloads path
+      # via Shell.Application — handles E:\Downloads, OneDrive redirect,
+      # any %USERPROFILE%-relative variation. Returns a real filesystem path.
+      WIN_DL=$(powershell.exe -NoProfile -Command "(New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path" 2>/dev/null | tr -d '\r\n')
+      if [ -z "$WIN_DL" ]; then
+        echo "Could not resolve Windows Downloads path (PowerShell interop failed)."
+        echo "Manual fallback: copy ${XPI_SRC} somewhere your Zotero can read, then install via Tools → Plugins."
+        return 1 2>/dev/null || exit 1
       fi
-    elif command -v zotero >/dev/null 2>&1; then
-      # Native Linux (or WSLg with Linux Zotero) — Zotero handles its own .xpi files.
-      zotero "$XPI" >/dev/null 2>&1 &
-      echo LAUNCHED_LINUX
+      DOWNLOADS=$(wslpath -u "$WIN_DL")
+      DISPLAY_PATH="$WIN_DL\\zotron.xpi"
     else
-      echo NO_ZOTERO_LAUNCHER
+      # Native Linux (or WSLg with Linux Zotero on PATH).
+      DOWNLOADS="$(xdg-user-dir DOWNLOAD 2>/dev/null || echo "$HOME/Downloads")"
+      DISPLAY_PATH="$DOWNLOADS/zotron.xpi"
     fi
     ;;
 
   MINGW*|MSYS*|CYGWIN*)
-    # Native Windows shell (Git Bash / Cygwin / MSYS2) — convert path and use file association.
-    cmd.exe /c start "" "$(cygpath -w "$XPI")" 2>/dev/null
-    echo LAUNCHED_WIN
+    # Native Windows shell.
+    WIN_DL=$(powershell.exe -NoProfile -Command "(New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path" 2>/dev/null | tr -d '\r\n')
+    DOWNLOADS=$(cygpath -u "$WIN_DL")
+    DISPLAY_PATH="$WIN_DL\\zotron.xpi"
     ;;
 
   *)
-    echo UNKNOWN_PLATFORM
+    echo "Unknown platform: $(uname -s). Manually copy ${XPI_SRC} somewhere Zotero can read."
+    return 1 2>/dev/null || exit 1
     ;;
 esac
+
+mkdir -p "$DOWNLOADS"
+cp "$XPI_SRC" "$DOWNLOADS/zotron.xpi"
+echo "XPI placed at: $DISPLAY_PATH"
 ```
 
-**Branches:**
+The `DISPLAY_PATH` is what you tell the user verbatim — it's the path **as their Zotero will see it** (Windows-style on Windows/WSL, POSIX on Linux/Mac).
 
-- `LAUNCHED_*` → Zotero should now show an "Install add-on?" dialog. Continue to step 6.
-- `NO_ZOTERO_LAUNCHER` (Linux but no `zotero` binary, not WSL) → Zotero isn't installed or isn't on PATH. Manual fallback (below).
-- `NO_WIN_TEMP` (WSL but `cmd.exe` failed) → WSL interop is broken. Manual fallback.
-- `UNKNOWN_PLATFORM` → odd `uname`. Manual fallback.
+### 6. Walk the user through the install dialog
 
-**Manual fallback** — tell the user verbatim:
+Tell the user **verbatim**, substituting `DISPLAY_PATH` from step 5:
 
-> Open Zotero → **Tools → Plugins** → click the gear icon (⚙) → **Install Add-on From File…** → pick this file: `${CLAUDE_PLUGIN_ROOT}/xpi/zotron.xpi` → click **Install** → **Restart Zotero**.
+> The XPI is now at:
 >
-> (On WSL with Windows Zotero: I copied it to `$WIN_TEMP\zotron.xpi` — drag that file onto Zotero's plugin window.)
-
-### 6. Walk the user through the dialog
-
-When step 5 launches Zotero, tell the user **verbatim**:
-
-> Zotero should now show an **"Install add-on?"** dialog. Click **Install**, then click **Restart** when prompted.
+> ```
+> <DISPLAY_PATH>
+> ```
 >
-> Tell me when Zotero has restarted and I'll verify.
+> In Zotero:
+> 1. **Tools → Plugins** (Zotero 7) or **Tools → Add-ons** (Zotero 6 — but verify with the user; only Zotero 8.0+ is officially supported).
+> 2. Click the gear icon (⚙) at the top right of that window.
+> 3. Choose **Install Add-on From File…**.
+> 4. Navigate to the path above and pick `zotron.xpi`.
+> 5. Click **Install**, then **Restart Zotero** when prompted.
+>
+> Tell me when Zotero has restarted.
 
 Then wait.
 
@@ -131,13 +135,12 @@ Then wait.
 After the user confirms restart, ping again (step 2). Expected: `OK`.
 
 If still `DOWN`:
-- `Tools → Plugins` should list `Zotron` as enabled. If it's there but greyed out, click **Enable**.
-- Port 23119 connection refused? Zotero's HTTP server is off: `Edit → Settings → Advanced → Config Editor` → set `extensions.zotero.httpServer.enabled = true`, restart.
-- Mismatch warning ("not compatible")? Only Zotero 8.0+ is verified. Warn the user; offer to proceed anyway.
+- `Tools → Plugins` should list **Zotron** as enabled. If it's there but disabled, click **Enable**.
+- Port 23119 connection refused? Zotero's HTTP server is off — `Edit → Settings → Advanced → Config Editor` → set `extensions.zotero.httpServer.enabled = true`, restart Zotero.
+- "Not compatible" warning? Verify Zotero version is 8.0+; only that range is tested. Earlier versions may still work but are unsupported.
 
-Once `system.ping` returns `OK`, run `zotron system.libraries` to print the user's library names. Hand off to the `zotero` skill for actual work.
+Once `system.ping` returns `OK`, run `zotron system.libraries` to print the user's library names. Hand off to the `zotero` skill.
 
 ## Skip when
 
 - The user says they already installed the XPI manually → just run step 2 (ping) and confirm.
-- The user is on Zotero 7 → warn them only Zotero 8.0+ is verified. Offer to proceed anyway.
