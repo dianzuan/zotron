@@ -77,18 +77,30 @@ Pre-Zotero-7 alternatives — vendoring a SQLite reader (fragile, write-locked, 
 
 `/zotron:setup` pings the bridge; if Zotero is missing the XPI, it copies the bundled `claude-plugin/xpi/zotron.xpi` into your real Downloads folder (auto-detected, handles drive relocation like `E:\Downloads` on Windows, OneDrive redirect, and POSIX defaults) and walks you through Zotero's native **Tools → Plugins → ⚙ → Install Add-on From File → restart**. Then talk to Claude in plain English — *"find papers on transformer attention"*, *"add DOI 10.1038/nature12373 to my ML collection"*, *"export APA references for items 10, 13, 16"*. Claude routes to the right sub-workflow (search / manage / export / OCR / RAG), which calls the RPC.
 
-### Path B — Codex / Code CLI
+### Path B — OpenAI Codex CLI / code-cli
 
-Codex does not need the Claude plugin marketplace. Install the Python CLI, install the XPI in Zotero, and make sure the `zotron*` commands are on `PATH` for the Code CLI session:
+Use this path when you work from Codex instead of Claude Code. It keeps the Claude plugin install format above intact, but exposes the same Zotero bridge through normal shell tools that Codex can run.
+
+**Prerequisites:** OpenAI Codex CLI (`codex`; some environments label it `code-cli`), [`uv`](https://docs.astral.sh/uv/getting-started/installation/), Zotero 8 desktop.
 
 ```bash
+# 1) Install Codex CLI if it is not already available.
+npm install -g @openai/codex
+
+# 2) Install the Zotron CLI / SDK from git.
 uv tool install "git+https://github.com/dianzuan/zotron.git#subdirectory=claude-plugin/python"
-# Zotero desktop: Tools → Plugins → ⚙ → Install Add-on From File → claude-plugin/xpi/zotron.xpi
+
+# 3) Install the Zotero-side XPI.
+#    Download zotron.xpi from the latest release, or copy claude-plugin/xpi/zotron.xpi
+#    from a local checkout, then install it in Zotero:
+#    Tools → Plugins → ⚙ → Install Add-on From File → restart.
+
+# 4) Verify the bridge before asking Codex to search, cite, OCR, or index.
 zotron ping
-zotron-rag hits "transformer attention" --collection "Reading" --output jsonl
+zotron search quick "transformer attention" --limit 10
 ```
 
-The future Codex plugin layout is expected to be copyable under `codex-plugin/` (`.codex-plugin/plugin.json`, `skills/zotero/`, `agents/`, and `bin/zotron*`). Until that surface is published, use the Python CLI + manual XPI path above; it preserves the same RPC and RAG/OCR contracts.
+After `zotron ping` succeeds, Codex can call `zotron`, `zotron-rag`, `zotron-ocr`, or raw HTTP directly. There is no native Codex plugin package yet, so this is the supported `code-cli` path until a `.codex-plugin/` wrapper is published.
 
 ### Path C — Python CLI / SDK
 
