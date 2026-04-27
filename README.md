@@ -42,9 +42,26 @@ Zotron is a [bootstrap-extension](https://www.zotero.org/support/dev/zotero_7_fo
 
 Validated on Zotero 8.0.4 against a 5000+-item / 70+-collection library. Zotero 7 not yet verified.
 
-## Why?
+## Why not the official Zotero Local API?
 
-Zotero's built-in `localhost:23119` HTTP service is hardcoded for the browser-extension use case (a handful of endpoints like `/connector/getSelectedCollection`) — not a general-purpose API. The workarounds — vendor a SQLite reader (fragile, schema-versioned, write-locked), `eval` JS through a debug-server backdoor (insecure, unsupported), or hand-roll a bootstrap plugin per project (rebuilds the wheel) — are all bad. Zotron fills that gap with a single stable typed surface any tool can target.
+Zotero 7 shipped its own [Local API](https://www.zotero.org/support/dev/web_api/v3/start) at `localhost:23119/api/` — a local port of the cloud Web API. If your client already speaks `api.zotero.org` (`pyzotero`, web-API-compatible plugins), point it at `/api/` and you're done. Zotron isn't trying to replace that.
+
+But the Local API is read-heavy and schema-locked to what `api.zotero.org` exposes. For agents and tooling, the gap shows up fast:
+
+| | Zotero Local API (`/api/`) | Zotron (`/zotron/rpc`) |
+|---|---|---|
+| Read items, collections, tags, annotations | ✅ | ✅ |
+| **Add by DOI / URL / ISBN / file (translator-backed)** | ❌ | ✅ |
+| **Dedupe, hierarchical collection ops, batch retag** | partial | ✅ |
+| **Fulltext cache (`getCachedFile`), embedded relations** | ❌ | ✅ |
+| **Current selection, switch library, trigger sync, plugin reload** | ❌ | ✅ |
+| **CSL bibliography in arbitrary installed style (full CiteProc)** | partial | ✅ |
+| Compatible with `pyzotero` / Web-API clients out-of-box | ✅ | ❌ (custom RPC) |
+| Requires the "Allow other apps" checkbox | yes | **no** (plugin endpoints bypass that gate) |
+
+Zotron is a typed JSON-RPC bridge to Zotero's **internal JS API** — the same surface plugins themselves use, with no Web-API schema translation layer between you and the data. 77 methods across 9 namespaces (CRUD + search + export + tags + sync + system).
+
+Pre-Zotero-7 alternatives — vendoring a SQLite reader (fragile, write-locked, schema-versioned), `eval`-ing JS through the debug-server backdoor (insecure, unsupported), or hand-rolling a one-off bootstrap plugin per project (rebuilds the wheel) — are all bad. Zotron replaces them with one stable typed surface.
 
 ## Quick start
 

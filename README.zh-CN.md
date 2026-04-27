@@ -42,9 +42,26 @@ Zotron 是一个 [bootstrap-extension](https://www.zotero.org/support/dev/zotero
 
 在 Zotero 8.0.4 上、5000+ 条目 / 70+ 集合的真实库验证过。Zotero 7 暂未验证。
 
-## 为啥要做
+## 为什么不用 Zotero 官方 Local API？
 
-Zotero 自带的 `localhost:23119` HTTP 接口是为浏览器扩展硬编码的几个端点（如 `/connector/getSelectedCollection`），不是通用 API。绕过去的几条路——直接读 SQLite（脆弱、跟版本走、写锁问题）、debug-server 后门 eval JS（不安全、不支持）、每个项目自己写 bootstrap 插件（重复造轮子）——全是坏路径。Zotron 就是来填这个空白：一个稳定、强类型、统一的 API 表面，任何工具都能对接。
+Zotero 7 上线了官方 [Local API](https://www.zotero.org/support/dev/web_api/v3/start)，把云端 Web API 端口到 `localhost:23119/api/`。如果你的客户端本来就是冲着 `api.zotero.org` 写的（`pyzotero`、Web-API 兼容的各种插件），改一下 base URL 就能跑——这是它的最佳场景，Zotron 不抢这块。
+
+但 Local API **以读为主**，schema 锁死在 `api.zotero.org` 公开的那套结构上。一旦你做 agent / 工具链，能力差距立刻显现：
+
+| | Zotero Local API (`/api/`) | Zotron (`/zotron/rpc`) |
+|---|---|---|
+| 读条目、集合、标签、注释 | ✅ | ✅ |
+| **按 DOI / URL / ISBN / 本地文件添加（走 translator）** | ❌ | ✅ |
+| **去重、集合层级操作、批量改标签** | 部分 | ✅ |
+| **全文缓存（`getCachedFile`）、内嵌关联** | ❌ | ✅ |
+| **当前选中条目、切换文献库、触发同步、热重载插件** | ❌ | ✅ |
+| **任意 CSL 样式的参考文献导出（完整 CiteProc）** | 部分 | ✅ |
+| 跟 `pyzotero` / Web-API 客户端开箱即用 | ✅ | ❌（自定义 RPC） |
+| 需要勾选"允许其他应用通讯" | 是 | **否**（plugin 端点绕过这个 gate） |
+
+Zotron 是 Zotero **内部 JS API** 的强类型 JSON-RPC 桥——插件自己用的那套接口，你和数据之间没有 Web-API schema 翻译层。9 个命名空间共 77 个方法，覆盖 CRUD + 搜索 + 导出 + 标签 + 同步 + system。
+
+Zotero 7 之前的几条绕路——直接读 SQLite（脆弱、跟版本走、写锁）、debug-server 后门 eval JS（不安全、不支持）、每个项目自己写一次性 bootstrap 插件（重复造轮子）——全是坏路径。Zotron 用一套稳定 typed surface 把它们替掉。
 
 ## 快速上手
 
