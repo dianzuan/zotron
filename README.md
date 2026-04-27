@@ -77,7 +77,32 @@ Pre-Zotero-7 alternatives — vendoring a SQLite reader (fragile, write-locked, 
 
 `/zotron:setup` pings the bridge; if Zotero is missing the XPI, it copies the bundled `claude-plugin/xpi/zotron.xpi` into your real Downloads folder (auto-detected, handles drive relocation like `E:\Downloads` on Windows, OneDrive redirect, and POSIX defaults) and walks you through Zotero's native **Tools → Plugins → ⚙ → Install Add-on From File → restart**. Then talk to Claude in plain English — *"find papers on transformer attention"*, *"add DOI 10.1038/nature12373 to my ML collection"*, *"export APA references for items 10, 13, 16"*. Claude routes to the right sub-workflow (search / manage / export / OCR / RAG), which calls the RPC.
 
-### Path B — Python CLI / SDK
+### Path B — OpenAI Codex CLI / code-cli
+
+Use this path when you work from Codex instead of Claude Code. It keeps the Claude plugin install format above intact, but exposes the same Zotero bridge through normal shell tools that Codex can run.
+
+**Prerequisites:** OpenAI Codex CLI (`codex`; some environments label it `code-cli`), [`uv`](https://docs.astral.sh/uv/getting-started/installation/), Zotero 8 desktop.
+
+```bash
+# 1) Install Codex CLI if it is not already available.
+npm install -g @openai/codex
+
+# 2) Install the Zotron CLI / SDK from git.
+uv tool install "git+https://github.com/dianzuan/zotron.git#subdirectory=claude-plugin/python"
+
+# 3) Install the Zotero-side XPI.
+#    Download zotron.xpi from the latest release, or copy claude-plugin/xpi/zotron.xpi
+#    from a local checkout, then install it in Zotero:
+#    Tools → Plugins → ⚙ → Install Add-on From File → restart.
+
+# 4) Verify the bridge before asking Codex to search, cite, OCR, or index.
+zotron ping
+zotron search quick "transformer attention" --limit 10
+```
+
+After `zotron ping` succeeds, Codex can call `zotron`, `zotron-rag`, `zotron-ocr`, or raw HTTP directly. There is no native Codex plugin package yet, so this is the supported `code-cli` path until a `.codex-plugin/` wrapper is published.
+
+### Path C — Python CLI / SDK
 
 ```bash
 # 1) Install the XPI manually from https://github.com/dianzuan/zotron/releases/latest
@@ -91,7 +116,7 @@ zotron rpc items.get '{"id":12345}'    # escape hatch — covers all 77 methods
 
 `--jq` filters output (`gh api --jq` style); `--install-completion {bash|zsh|fish|powershell}` enables shell completion. SDK contract: [`docs/api-stability.md`](docs/api-stability.md).
 
-### Path C — Raw HTTP
+### Path D — Raw HTTP
 
 ```bash
 curl -s -X POST http://localhost:23119/zotron/rpc \
@@ -144,6 +169,16 @@ zotron-rag cite "how do transformers attend to long-range context?" --collection
   "score": 0.87, "zoteroUri": "zotero://select/library/items/ABC123" }
 ```
 
+The 2026 RAG/OCR roadmap extends this toward Zotero-native artifacts and an academic-zh friendly JSONL hit stream. The stable target is:
+
+- provider raw evidence in `<item-key>.zotron-ocr.raw.zip`;
+- normalized OCR/parser blocks in `<item-key>.zotron-blocks.jsonl`;
+- retrieval chunks in `<item-key>.zotron-chunks.jsonl`;
+- vectors plus index metadata in `<item-key>.zotron-embed.npz`;
+- retrieval hits as one JSON object per line with required `item_key`, `title`, and `text`, plus provenance fields such as `zotero_uri`, `chunk_id`, `block_ids`, `section_heading`, `query`, and `score`.
+
+Markdown is allowed as a derived convenience output, but it is not the source of truth for OCR/RAG because it loses page, bbox, table, figure, provider, and reading-order provenance.
+
 ## Development
 
 Node 18+, Zotero 8 installed locally. (WSL recommended on Windows.)
@@ -171,6 +206,8 @@ Preference keys reserved in `SETTINGS_KEYS` (callable via `settings.set`); consu
 - `ocr.*` — for a future `attachments.ocr` method
 - `embedding.*` — semantic search / chunking
 - `rag.*` — for `search.semantic`
+
+See [`docs/2026-04-27-rag-ocr-roadmap.md`](docs/2026-04-27-rag-ocr-roadmap.md) for the current storage and retrieval contract. First-class RAG/OCR work should preserve provider raw outputs, normalize to blocks/chunks, and expose academic-zh compatible retrieval hits without treating markdown as the only truth.
 
 PRs welcome. New RPC methods need a mocha test using `test/fixtures/zotero-mock.ts`.
 
