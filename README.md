@@ -77,30 +77,22 @@ Pre-Zotero-7 alternatives — vendoring a SQLite reader (fragile, write-locked, 
 
 `/zotron:setup` pings the bridge; if Zotero is missing the XPI, it copies the bundled `claude-plugin/xpi/zotron.xpi` into your real Downloads folder (auto-detected, handles drive relocation like `E:\Downloads` on Windows, OneDrive redirect, and POSIX defaults) and walks you through Zotero's native **Tools → Plugins → ⚙ → Install Add-on From File → restart**. Then talk to Claude in plain English — *"find papers on transformer attention"*, *"add DOI 10.1038/nature12373 to my ML collection"*, *"export APA references for items 10, 13, 16"*. Claude routes to the right sub-workflow (search / manage / export / OCR / RAG), which calls the RPC.
 
-### Path B — OpenAI Codex CLI / code-cli
+### Path B — Codex / Code CLI
 
-Use this path when you work from Codex instead of Claude Code. It keeps the Claude plugin install format above intact, but exposes the same Zotero bridge through normal shell tools that Codex can run.
-
-**Prerequisites:** OpenAI Codex CLI (`codex`; some environments label it `code-cli`), [`uv`](https://docs.astral.sh/uv/getting-started/installation/), Zotero 8 desktop.
+Codex users can use the same bundled bridge without changing the Claude Code setup path. Until a Codex marketplace package is published, copy the plugin-shaped files from this repository (or a release checkout) into your Codex plugin/skills area and install the same Python CLI + XPI:
 
 ```bash
-# 1) Install Codex CLI if it is not already available.
-npm install -g @openai/codex
-
-# 2) Install the Zotron CLI / SDK from git.
+# 1) Install the Zotero XPI manually from the latest release, or use this checkout:
+#    claude-plugin/xpi/zotron.xpi
+# 2) Install the CLI commands used by the Codex skills:
 uv tool install "git+https://github.com/dianzuan/zotron.git#subdirectory=claude-plugin/python"
-
-# 3) Install the Zotero-side XPI.
-#    Download zotron.xpi from the latest release, or copy claude-plugin/xpi/zotron.xpi
-#    from a local checkout, then install it in Zotero:
-#    Tools → Plugins → ⚙ → Install Add-on From File → restart.
-
-# 4) Verify the bridge before asking Codex to search, cite, OCR, or index.
+# 3) Put the installed zotron commands on PATH for code-cli/Codex sessions:
 zotron ping
-zotron search quick "transformer attention" --limit 10
+zotron-ocr status --collection "My Papers"
+zotron-rag hits "transformer attention" --collection "My Papers" --output jsonl
 ```
 
-After `zotron ping` succeeds, Codex can call `zotron`, `zotron-rag`, `zotron-ocr`, or raw HTTP directly. There is no native Codex plugin package yet, so this is the supported `code-cli` path until a `.codex-plugin/` wrapper is published.
+A future `codex-plugin/` package should mirror the existing plugin layout: `.codex-plugin/plugin.json`, `skills/zotero/SKILL.md`, `skills/zotero/*.md`, `agents/zotero-researcher.md`, and `bin/zotron*`. For now, Codex/code-cli users should install the XPI in Zotero, install the Python CLI, and expose `zotron`, `zotron-ocr`, and `zotron-rag` on `PATH`.
 
 ### Path C — Python CLI / SDK
 
