@@ -1,73 +1,99 @@
+"""Tests for academic-zh retrieval hit contract."""
+
 import json
 import sys
 from unittest.mock import MagicMock, patch
 
-from zotron.rag.search import VectorStore, format_retrieval_hit, write_hits_jsonl
+from zotron.rag.search import VectorStore, results_to_hits
 
 
-def test_format_retrieval_hit_contract_contains_minimum_and_provenance():
-    row = {
-        "item_id": "ITEM1",
-        "item_key": "ITEM1",
-        "title": "产业贸易中心性、贸易外向度与金融风险",
-        "authors": ["王姝黛", "杨子荣"],
-        "year": 2022,
-        "venue": "中国工业经济",
-        "section_heading": "三、研究设计",
-        "chunk_id": "ATT:c0",
-        "block_ids": ["ATT:p1:b1"],
-        "text": "本文利用世界投入产出表...",
-        "score": 0.82,
-    }
-    hit = format_retrieval_hit(row, query="贸易中心性")
-    assert hit["item_key"] == "ITEM1"
-    assert hit["title"]
-    assert hit["text"]
-    assert hit["chunk_id"] == "ATT:c0"
-    assert hit["block_ids"] == ["ATT:p1:b1"]
-    assert hit["query"] == "贸易中心性"
-    assert hit["zotero_uri"] == "zotero://select/library/items/ITEM1"
+def test_results_to_hits_emits_minimum_and_recommended_fields():
+    rows = [
+        {
+            "item_id": "ITEM",
+            "item_key": "Wang_2022_trade_risk",
+            "title": "产业贸易中心性、贸易外向度与金融风险",
+            "authors": ["王姝黛", "杨子荣"],
+            "year": 2022,
+            "venue": "中国工业经济",
+            "doi": "",
+            "section": "三、研究设计",
+            "chunk_id": "ATT:c42",
+            "block_ids": ["ATT:p12:b08"],
+            "text": "本文利用世界投入产出表和金融风险指标...",
+            "score": 0.82,
+        }
+    ]
+
+    hits = results_to_hits(rows, query="贸易中心性 金融风险 识别策略")
+
+    assert hits == [
+        {
+            "item_key": "Wang_2022_trade_risk",
+            "title": "产业贸易中心性、贸易外向度与金融风险",
+            "text": "本文利用世界投入产出表和金融风险指标...",
+            "authors": ["王姝黛", "杨子荣"],
+            "year": 2022,
+            "venue": "中国工业经济",
+            "doi": "",
+            "zotero_uri": "zotero://select/library/items/Wang_2022_trade_risk",
+            "section_heading": "三、研究设计",
+            "chunk_id": "ATT:c42",
+            "block_ids": ["ATT:p12:b08"],
+            "query": "贸易中心性 金融风险 识别策略",
+            "score": 0.82,
+        }
+    ]
 
 
-def test_hits_jsonl_writer_outputs_one_hit_per_line(tmp_path):
-    path = tmp_path / "hits.jsonl"
-    write_hits_jsonl(path, [{"item_key": "I", "title": "T", "text": "span"}])
-    lines = path.read_text(encoding="utf-8").splitlines()
-    assert len(lines) == 1
-    assert json.loads(lines[0]) == {"item_key": "I", "title": "T", "text": "span"}
+def test_vector_store_search_can_return_academic_zh_hits():
+    store = VectorStore(collection="test", collection_id=1, model="m")
+    store.add_chunk(
+        item_id="legacy-id",
+        title="Title",
+        authors="Author A",
+        section="Methods",
+        chunk_index=0,
+        text="answer span",
+        vector=[1.0, 0.0],
+        item_key="ITEMKEY",
+        chunk_id="ATT:c000001",
+        block_ids=["ATT:p1:b01"],
+        year=2026,
+    )
+
+    hits = store.search_hits([1.0, 0.0], query="answer", top_k=1)
+
+    assert hits[0]["item_key"] == "ITEMKEY"
+    assert hits[0]["title"] == "Title"
+    assert hits[0]["text"] == "answer span"
+    assert hits[0]["section_heading"] == "Methods"
+    assert hits[0]["block_ids"] == ["ATT:p1:b01"]
 
 
-def test_zotron_rag_hits_jsonl_cli_keeps_search_store_compatible(tmp_path, capsys):
+def test_rag_hits_cli_outputs_jsonl(tmp_path, capsys):
     from zotron.rag.cli import main as rag_main
 
     store = VectorStore(collection="test", collection_id=1, model="m")
     store.add_chunk(
-        item_id="ITEM1",
-        title="T1",
-        authors="A1",
-        section="S1",
-        chunk_index=0,
-        text="answer text",
-        vector=[1.0, 0.0],
-        attachment_id=10,
-        chunk_id="ATT:c0",
-        block_ids=["ATT:p1:b1"],
+        item_id="legacy-id", title="Title", authors="Author A", section="Methods",
+        chunk_index=0, text="answer span", vector=[1.0, 0.0], item_key="ITEMKEY",
     )
     store_path = tmp_path / "test.json"
     store.save(store_path)
 
-    with patch("zotron.rag.cli._store_path", return_value=store_path), patch("zotron.rag.cli._build_embedder") as mock_eb:
+    with patch("zotron.rag.cli._store_path", return_value=store_path), \
+         patch("zotron.rag.cli._build_embedder") as mock_eb:
         mock_emb = MagicMock()
         mock_emb.embed.return_value = [1.0, 0.0]
         mock_eb.return_value = mock_emb
-        argv = ["zotron-rag", "hits", "answer", "--collection", "test", "--output", "jsonl"]
-        with patch.object(sys, "argv", argv):
+        with patch.object(sys, "argv", [
+            "zotron-rag", "hits", "answer", "--collection", "test", "--output", "jsonl"
+        ]):
             rag_main()
 
-    line = capsys.readouterr().out.strip()
-    hit = json.loads(line)
-    assert hit["item_key"] == "ITEM1"
-    assert hit["title"] == "T1"
-    assert hit["text"] == "answer text"
-    assert hit["chunk_id"] == "ATT:c0"
-    assert hit["block_ids"] == ["ATT:p1:b1"]
+    lines = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert len(lines) == 1
+    assert lines[0]["item_key"] == "ITEMKEY"
+    assert lines[0]["title"] == "Title"
+    assert lines[0]["text"] == "answer span"
