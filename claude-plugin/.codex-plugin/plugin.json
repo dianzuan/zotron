@@ -1,0 +1,38 @@
+{
+  "name": "zotron",
+  "version": "0.1.0",
+  "description": "Zotero library bridge for Codex: search, manage, export, OCR, and RAG over local papers.",
+  "author": {
+    "name": "diamondrill",
+    "url": "https://github.com/dianzuan"
+  },
+  "homepage": "https://github.com/dianzuan/zotron",
+  "repository": "https://github.com/dianzuan/zotron",
+  "license": "AGPL-3.0-or-later",
+  "keywords": [
+    "zotero",
+    "academic",
+    "citations",
+    "ocr",
+    "rag"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Zotron",
+    "shortDescription": "Search, cite, OCR, and RAG over your Zotero library.",
+    "longDescription": "Zotron connects Codex to a local Zotero desktop library through the bundled Zotero XPI and Python CLI. It supports paper search, collection management, citation export, OCR preparation, and semantic retrieval with span provenance.",
+    "developerName": "diamondrill",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/dianzuan/zotron",
+    "defaultPrompt": [
+      "$zotron-setup",
+      "Search Zotero for papers on digital economy.",
+      "Build RAG hits for this Zotero collection."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

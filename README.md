@@ -79,7 +79,7 @@ Pre-Zotero-7 alternatives — vendoring a SQLite reader (fragile, write-locked, 
 
 ### Path B — OpenAI Codex CLI / code-cli
 
-Use this path when you work from Codex instead of Claude Code. It keeps the Claude plugin install format above intact, but exposes the same Zotero bridge through normal shell tools that Codex can run.
+Use this path when you work from Codex instead of Claude Code. The same `claude-plugin/` package also ships a native Codex plugin manifest, so Codex and Claude Code use the same bridge, Python CLI, XPI, and skills.
 
 **Prerequisites:** OpenAI Codex CLI (`codex`; some environments label it `code-cli`), [`uv`](https://docs.astral.sh/uv/getting-started/installation/), Zotero 8 desktop.
 
@@ -87,20 +87,29 @@ Use this path when you work from Codex instead of Claude Code. It keeps the Clau
 # 1) Install Codex CLI if it is not already available.
 npm install -g @openai/codex
 
-# 2) Install the Zotron CLI / SDK from git.
-uv tool install "git+https://github.com/dianzuan/zotron.git#subdirectory=claude-plugin/python"
+# 2) Add the Zotron plugin marketplace.
+codex plugin marketplace add dianzuan/zotron
 
-# 3) Install the Zotero-side XPI.
-#    Download zotron.xpi from the latest release, or copy claude-plugin/xpi/zotron.xpi
-#    from a local checkout, then install it in Zotero:
-#    Tools → Plugins → ⚙ → Install Add-on From File → restart.
+# Local checkout alternative:
+# codex plugin marketplace add .
+```
 
-# 4) Verify the bridge before asking Codex to search, cite, OCR, or index.
+Then install **Zotron** from Codex's plugin UI and invoke the setup skill:
+
+```text
+$zotron-setup
+```
+
+The setup skill exposes the bundled `zotron`, `zotron-rag`, and `zotron-ocr` shims, copies the bundled `zotron.xpi` to your Downloads folder when needed, and walks you through Zotero's native **Tools → Plugins → ⚙ → Install Add-on From File → restart** flow.
+
+After Zotero restarts:
+
+```bash
 zotron ping
 zotron search quick "transformer attention" --limit 10
 ```
 
-After `zotron ping` succeeds, Codex can call `zotron`, `zotron-rag`, `zotron-ocr`, or raw HTTP directly. There is no native Codex plugin package yet, so this is the supported `code-cli` path until a `.codex-plugin/` wrapper is published.
+After `zotron ping` succeeds, Codex can call `zotron`, `zotron-rag`, `zotron-ocr`, or raw HTTP directly through the installed plugin skill.
 
 ### Path C — Python CLI / SDK
 
