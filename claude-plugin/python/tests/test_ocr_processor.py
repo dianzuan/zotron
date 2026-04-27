@@ -122,3 +122,97 @@ def test_format_note_html():
     assert "<h2>" in html
     assert "<strong>world</strong>" in html
     assert "<hr/>" in html
+
+
+# ---------------------------------------------------------------------------
+# Artifact pipeline
+# ---------------------------------------------------------------------------
+
+
+class _FakeOCRResult:
+    provider = "mock-ocr"
+    model = "mock-layout"
+    raw_payload = {
+        "pages": [
+            {
+                "page": 1,
+                "blocks": [
+                    {"type": "heading", "text": "Intro"},
+                    {"type": "paragraph", "text": "Alpha", "bbox": [1, 2, 3, 4]},
+                ],
+            }
+        ]
+    }
+    markdown = "# Intro\n\nAlpha"
+    text = ""
+    files = {"provider/page-1.md": "# Intro\n\nAlpha"}
+
+
+def test_process_item_writes_zotero_artifact_pipeline(tmp_path):
+    processor, rpc, engine = _make_processor()
+    processor.artifact_dir = tmp_path
+    pdf_path = tmp_path / "source.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 fake")
+    engine.ocr_pdf.return_value = _FakeOCRResult()
+
+    def call(method, params=None):
+        if method == "notes.get":
+            return []
+        if method == "items.get":
+            return {"id": 42, "key": "ITEM1", "title": "My Paper"}
+        if method == "attachments.list":
+            return [{"id": 9, "key": "ATT1", "contentType": "application/pdf"}]
+        if method == "attachments.getPath":
+            return {"path": str(pdf_path)}
+        if method == "attachments.add":
+            return {"id": 100 + len(rpc.call.call_args_list), "title": params["title"]}
+        if method == "notes.create":
+            return {"id": 501}
+        raise AssertionError(f"unexpected RPC method {method}")
+
+    rpc.call.side_effect = call
+
+    assert processor.process_item(42, "My Paper", force=True) == "ok"
+
+    add_calls = [c.args[1] for c in rpc.call.call_args_list if c.args[0] == "attachments.add"]
+    assert [c["title"] for c in add_calls] == [
+        "ITEM1.zotron-ocr.raw.zip",
+        "ITEM1.zotron-blocks.jsonl",
+        "ITEM1.zotron-chunks.jsonl",
+    ]
+    assert all((tmp_path / title).exists() for title in [
+        "ITEM1.zotron-ocr.raw.zip",
+        "ITEM1.zotron-blocks.jsonl",
+        "ITEM1.zotron-chunks.jsonl",
+    ])
+    blocks = (tmp_path / "ITEM1.zotron-blocks.jsonl").read_text(encoding="utf-8")
+    chunks = (tmp_path / "ITEM1.zotron-chunks.jsonl").read_text(encoding="utf-8")
+    assert '"block_id": "ATT1:p1:b1"' in blocks
+    assert '"section_heading": "Intro"' in chunks
+    assert any(c.args[0] == "notes.create" for c in rpc.call.call_args_list)
+
+
+def test_process_item_can_skip_preview_note_while_writing_artifacts(tmp_path):
+    processor, rpc, engine = _make_processor()
+    processor.artifact_dir = tmp_path
+    processor.write_preview_note = False
+    pdf_path = tmp_path / "source.pdf"
+    pdf_path.write_bytes(b"pdf")
+    engine.ocr_pdf.return_value = "Plain OCR text"
+
+    def call(method, params=None):
+        if method == "items.get":
+            return {"key": "ITEM2"}
+        if method == "attachments.list":
+            return [{"id": 10, "key": "ATT2", "contentType": "application/pdf"}]
+        if method == "attachments.getPath":
+            return str(pdf_path)
+        if method == "attachments.add":
+            return {"id": 200, "title": params["title"]}
+        raise AssertionError(f"unexpected RPC method {method}")
+
+    rpc.call.side_effect = call
+
+    assert processor.process_item(43, "Plain", force=True) == "ok"
+    assert not any(c.args[0] == "notes.create" for c in rpc.call.call_args_list)
+    assert (tmp_path / "ITEM2.zotron-ocr.raw.zip").exists()

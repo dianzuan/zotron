@@ -1,4 +1,3 @@
-import json
 import zipfile
 from unittest.mock import MagicMock
 

@@ -12,6 +12,7 @@ import json
 import sys
 from dataclasses import asdict
 from pathlib import Path
+from typing import Literal, NoReturn, cast
 
 import typer
 
@@ -46,7 +47,7 @@ def _new_rpc(url: str) -> ZoteroRPC:
     return ZoteroRPC(url)
 
 
-def _die(code: str, message: str, exit_code: int = 1) -> None:
+def _die(code: str, message: str, exit_code: int = 1) -> NoReturn:
     typer.echo(json.dumps({"ok": False, "error": {"code": code, "message": message}}, ensure_ascii=False))
     raise typer.Exit(code=exit_code)
 
@@ -349,6 +350,7 @@ def push(
     """
     if on_duplicate not in ("skip", "update", "create"):
         _die("INVALID_ARGS", f"--on-duplicate must be skip|update|create, got {on_duplicate!r}", 2)
+    on_duplicate = cast(Literal["skip", "update", "create"], on_duplicate)
 
     # Read payload
     if json_file == "-":
@@ -444,7 +446,7 @@ def find_pdfs(
 
     # collections.getItems returns {items: [...], total: N}
     resp = rpc.call("collections.getItems", {"id": coll_id}) or {}
-    items = resp.get("items", []) if isinstance(resp, dict) else (resp or [])
+    items = cast(list[dict], resp.get("items", []) if isinstance(resp, dict) else (resp or []))
 
     # Filter to items missing PDFs. Ask the XPI per-item via attachments.list.
     missing = []
@@ -452,7 +454,7 @@ def find_pdfs(
         item_id = it.get("id")
         if item_id is None:
             continue
-        attachments = rpc.call("attachments.list", {"parentId": item_id}) or []
+        attachments = cast(list[dict], rpc.call("attachments.list", {"parentId": item_id}) or [])
         # Match on MIME type OR .pdf filename suffix. Zotero may store some
         # attachments with non-standard contentType; a MIME-only check would
         # false-negative and we'd try to find another PDF the item already has.

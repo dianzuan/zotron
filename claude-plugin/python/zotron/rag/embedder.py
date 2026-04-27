@@ -133,6 +133,7 @@ class DoubaoMultimodalEmbedder(Embedder):
                     _time.sleep(1.0 * (attempt + 1))
                 else:
                     raise
+        raise RuntimeError("embedding API retry loop exited unexpectedly")
 
     def embed(self, text: str) -> list[float]:
         """Embed a query text (search-time) with query instruction."""

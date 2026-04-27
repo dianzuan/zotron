@@ -28,7 +28,7 @@ def emit(
     """
     if jq_filter is not None:
         try:
-            import jq as jq_lib
+            import jq as jq_lib  # type: ignore[import-not-found]
         except ImportError as e:
             raise RuntimeError(
                 "jq library required for --jq; install with `pip install jq`"

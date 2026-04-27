@@ -327,7 +327,7 @@ def push_item(
             update_params["tags"] = xpi_payload["tags"]
         rpc.call("items.update", update_params)
         item_id = dup_id
-        status = "updated"
+        status: Literal["updated", "created"] = "updated"
     else:
         created = rpc.call("items.create", xpi_payload)
         if not created or "id" not in created:

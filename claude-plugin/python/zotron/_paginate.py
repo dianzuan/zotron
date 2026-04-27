@@ -31,6 +31,7 @@ def paginate(rpc: Any, method: str, params: dict[str, Any],
         resp = rpc.call(method, page_params)
 
         # Extract the page list
+        page: list[Any] | None
         if isinstance(resp, list):
             page = resp
         elif isinstance(resp, dict):
@@ -56,6 +57,7 @@ def paginate(rpc: Any, method: str, params: dict[str, Any],
                 f"paginate: {method!r} returned non-list/non-dict shape "
                 f"after {len(out)} accumulated rows; aborting"
             )
+        assert page is not None
 
         # No-progress detector: if this page is identical to the previous
         # one, the method is ignoring offset (XPI bug). Bail out loudly

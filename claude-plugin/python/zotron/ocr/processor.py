@@ -1,23 +1,41 @@
-"""OCR processor: orchestrates collection traversal, OCR, and Note creation."""
+"""OCR processor: orchestrates Zotero traversal, OCR, artifacts, and previews."""
 
 from __future__ import annotations
 
 import datetime
+import tempfile
 from pathlib import Path
+from typing import Any, cast
 
-import markdown as md
+import markdown as md  # type: ignore[import-untyped]
 
 from zotron.collections import find_by_name as _find_collection_by_name
+from zotron.ocr.artifacts import (
+    ProviderRawArtifact,
+    write_blocks_jsonl,
+    write_chunks_jsonl,
+    write_provider_raw_zip,
+)
 from zotron.ocr.engine import OCREngine
+from zotron.ocr.normalize import blocks_from_provider_payload, chunks_from_blocks
 from zotron.rpc import ZoteroRPC
 
 
 class OCRProcessor:
-    """Orchestrates: find collection → iterate items → OCR → write Note."""
+    """Orchestrates: find items → OCR → attach artifacts → optional Note preview."""
 
-    def __init__(self, rpc: ZoteroRPC, engine: OCREngine) -> None:
+    def __init__(
+        self,
+        rpc: ZoteroRPC,
+        engine: OCREngine,
+        *,
+        artifact_dir: str | Path | None = None,
+        write_preview_note: bool = True,
+    ) -> None:
         self.rpc = rpc
         self.engine = engine
+        self.artifact_dir = Path(artifact_dir).expanduser() if artifact_dir else None
+        self.write_preview_note = write_preview_note
 
     # ------------------------------------------------------------------
     # Collection helpers
@@ -33,7 +51,7 @@ class OCRProcessor:
 
     def has_ocr_note(self, item_id: int) -> bool:
         """Return True if the item already has a Note tagged 'ocr'."""
-        notes = self.rpc.call("notes.get", {"parentId": item_id}) or []
+        notes = cast(list[dict[str, Any]], self.rpc.call("notes.get", {"parentId": item_id}) or [])
         for note in notes:
             tags = note.get("tags") or []
             if "ocr" in tags:
@@ -59,19 +77,48 @@ class OCRProcessor:
             pass
         return win_path
 
+    def get_pdf_attachment(self, item_id: int) -> dict[str, Any] | None:
+        """Return first PDF attachment with a resolved filesystem ``path``."""
+        attachments = cast(
+            list[dict[str, Any]],
+            self.rpc.call("attachments.list", {"parentId": item_id}) or [],
+        )
+        for att in attachments:
+            if att.get("contentType") != "application/pdf":
+                continue
+            att_id = att.get("id")
+            result = self.rpc.call("attachments.getPath", {"id": att_id})
+            path_str = result.get("path") if isinstance(result, dict) else result
+            if path_str:
+                return {**att, "path": self._to_linux_path(str(path_str))}
+        return None
+
     def get_pdf_path(self, item_id: int) -> Path | None:
         """Return the filesystem path to the first PDF attachment, or None."""
-        attachments = self.rpc.call("attachments.list", {"parentId": item_id}) or []
-        for att in attachments:
-            if att.get("contentType") == "application/pdf":
-                att_id = att.get("id")
-                result = self.rpc.call("attachments.getPath", {"id": att_id})
-                path_str = result.get("path") if isinstance(result, dict) else result
-                if path_str:
-                    # Zotero returns Windows paths; convert for WSL
-                    linux_path = self._to_linux_path(path_str)
-                    return Path(linux_path)
-        return None
+        attachment = self.get_pdf_attachment(item_id)
+        return Path(attachment["path"]) if attachment else None
+
+    def _item_key(self, item_id: int) -> str:
+        try:
+            item = self.rpc.call("items.get", {"id": item_id}) or {}
+        except Exception:  # noqa: BLE001 - item key is a best-effort filename aid
+            item = {}
+        return str(item.get("key") or item.get("itemKey") or item_id)
+
+    @staticmethod
+    def _attachment_key(attachment: dict[str, Any], item_id: int) -> str:
+        return str(
+            attachment.get("key")
+            or attachment.get("itemKey")
+            or attachment.get("id")
+            or f"item-{item_id}-pdf"
+        )
+
+    def _attach_artifact(self, item_id: int, path: Path) -> None:
+        self.rpc.call(
+            "attachments.add",
+            {"parentId": item_id, "path": str(path), "title": path.name},
+        )
 
     # ------------------------------------------------------------------
     # HTML formatting
@@ -84,24 +131,7 @@ class OCRProcessor:
         provider: str,
         page_count: int | None = None,
     ) -> str:
-        """Convert markdown to HTML and wrap with OCR header.
-
-        Parameters
-        ----------
-        title:
-            Title of the source item.
-        markdown:
-            OCR output in Markdown format.
-        provider:
-            Name of the OCR engine/provider.
-        page_count:
-            Optional page count to include in the header.
-
-        Returns
-        -------
-        str
-            HTML string suitable for use as a Zotero note body.
-        """
+        """Convert markdown to HTML and wrap with OCR header."""
         date_str = datetime.date.today().isoformat()
         if page_count is not None:
             meta = f"OCR by {provider} | {date_str} | {page_count} pages"
@@ -120,49 +150,136 @@ class OCRProcessor:
         )
 
     # ------------------------------------------------------------------
+    # OCR result helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _result_field(result: Any, name: str, default: Any = None) -> Any:
+        if isinstance(result, dict):
+            return result.get(name, default)
+        return getattr(result, name, default)
+
+    def _coerce_ocr_result(self, result: Any) -> dict[str, Any]:
+        if isinstance(result, str):
+            provider = type(self.engine).__name__
+            return {
+                "provider": provider,
+                "model": provider,
+                "raw_payload": {"markdown": result},
+                "markdown": result,
+                "files": {},
+            }
+
+        markdown = self._result_field(result, "markdown") or self._result_field(result, "text") or ""
+        raw_payload = self._result_field(result, "raw_payload")
+        if raw_payload is None:
+            raw_payload = {"markdown": markdown}
+        provider = self._result_field(result, "provider") or type(self.engine).__name__
+        return {
+            "provider": str(provider),
+            "model": str(self._result_field(result, "model") or provider),
+            "raw_payload": raw_payload,
+            "markdown": str(markdown),
+            "files": dict(self._result_field(result, "files", {}) or {}),
+        }
+
+    def _write_artifacts(
+        self,
+        *,
+        directory: Path,
+        item_id: int,
+        item_key: str,
+        attachment_key: str,
+        pdf_path: Path,
+        ocr: dict[str, Any],
+    ) -> list[Path]:
+        raw_path = Path(
+            write_provider_raw_zip(
+                directory,
+                ProviderRawArtifact(
+                    item_key=item_key,
+                    attachment_key=attachment_key,
+                    provider=ocr["provider"],
+                    payload=ocr["raw_payload"],
+                    files=ocr["files"],
+                    source_path=str(pdf_path),
+                ),
+            ),
+        )
+        blocks = blocks_from_provider_payload(
+            ocr["raw_payload"],
+            item_key=item_key,
+            attachment_key=attachment_key,
+            provider=ocr["provider"],
+        )
+        if not blocks and ocr["markdown"]:
+            blocks = blocks_from_provider_payload(
+                {"markdown": ocr["markdown"]},
+                item_key=item_key,
+                attachment_key=attachment_key,
+                provider=ocr["provider"],
+            )
+        chunks = chunks_from_blocks(blocks)
+        blocks_path = Path(write_blocks_jsonl(directory, item_key, blocks))
+        chunks_path = Path(write_chunks_jsonl(directory, item_key, chunks))
+        return [raw_path, blocks_path, chunks_path]
+
+    # ------------------------------------------------------------------
     # Processing
     # ------------------------------------------------------------------
 
     def process_item(
         self, item_id: int, title: str, force: bool = False
     ) -> str:
-        """OCR a single item and write a Note back to Zotero.
-
-        Parameters
-        ----------
-        item_id:
-            Zotero item id.
-        title:
-            Item title (used in the Note header).
-        force:
-            If True, re-OCR even if an OCR note already exists.
-
-        Returns
-        -------
-        str
-            ``"ok"``, ``"skipped"``, or ``"error: <message>"``.
-        """
+        """OCR a single item, attach raw/block/chunk artifacts, and maybe a Note."""
         try:
-            if not force and self.has_ocr_note(item_id):
+            if self.write_preview_note and not force and self.has_ocr_note(item_id):
                 return "skipped"
 
-            pdf_path = self.get_pdf_path(item_id)
-            if pdf_path is None:
+            attachment = self.get_pdf_attachment(item_id)
+            if attachment is None:
                 return "error: no PDF attachment found"
+            pdf_path = Path(attachment["path"])
+            item_key = self._item_key(item_id)
+            attachment_key = self._attachment_key(attachment, item_id)
 
-            ocr_text = self.engine.ocr_pdf(pdf_path)
-            provider = type(self.engine).__name__
+            ocr = self._coerce_ocr_result(self.engine.ocr_pdf(pdf_path))
 
-            html = self.format_note_html(title, ocr_text, provider)
+            if self.artifact_dir is None:
+                with tempfile.TemporaryDirectory(prefix="zotron-ocr-") as tmp:
+                    paths = self._write_artifacts(
+                        directory=Path(tmp),
+                        item_id=item_id,
+                        item_key=item_key,
+                        attachment_key=attachment_key,
+                        pdf_path=pdf_path,
+                        ocr=ocr,
+                    )
+                    for path in paths:
+                        self._attach_artifact(item_id, path)
+            else:
+                self.artifact_dir.mkdir(parents=True, exist_ok=True)
+                paths = self._write_artifacts(
+                    directory=self.artifact_dir,
+                    item_id=item_id,
+                    item_key=item_key,
+                    attachment_key=attachment_key,
+                    pdf_path=pdf_path,
+                    ocr=ocr,
+                )
+                for path in paths:
+                    self._attach_artifact(item_id, path)
 
-            self.rpc.call(
-                "notes.create",
-                {
-                    "parentId": item_id,
-                    "content": html,
-                    "tags": ["ocr"],
-                },
-            )
+            if self.write_preview_note:
+                html = self.format_note_html(title, ocr["markdown"], ocr["provider"])
+                self.rpc.call(
+                    "notes.create",
+                    {
+                        "parentId": item_id,
+                        "content": html,
+                        "tags": ["ocr"],
+                    },
+                )
             return "ok"
         except Exception as exc:  # noqa: BLE001
             return f"error: {exc}"
@@ -170,20 +287,7 @@ class OCRProcessor:
     def process_collection(
         self, collection_name: str, force: bool = False
     ) -> dict:
-        """OCR all items in the named collection.
-
-        Parameters
-        ----------
-        collection_name:
-            Name of the Zotero collection to process.
-        force:
-            Passed through to :meth:`process_item`.
-
-        Returns
-        -------
-        dict
-            ``{"ok": N, "skipped": M, "errors": [...]}``.
-        """
+        """OCR all items in the named collection."""
         result: dict = {"ok": 0, "skipped": 0, "errors": []}
 
         collection_id = self.find_collection_id(collection_name)

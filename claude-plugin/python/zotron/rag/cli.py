@@ -6,7 +6,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from zotron.collections import find_by_name as _find_collection_by_name
 from zotron.config import load_config
@@ -35,7 +35,10 @@ def _get_item_text(rpc: ZoteroRPC, item_id: str) -> str | None:
 
     # Try OCR notes via notes.get
     try:
-        notes = rpc.call("notes.get", {"parentId": int(item_id)}) or []
+        notes = cast(
+            list[dict[str, Any]],
+            rpc.call("notes.get", {"parentId": int(item_id)}) or [],
+        )
         for note in notes:
             tags = note.get("tags") or []
             # tags may be strings or dicts with "tag" key

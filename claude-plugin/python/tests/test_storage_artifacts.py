@@ -9,9 +9,15 @@ from unittest.mock import MagicMock
 import numpy as np
 
 from zotron.artifacts import (
+    ProviderRawArtifact,
     ZoteroArtifactStore,
+    artifact_path,
     find_stale_reasons,
+    is_metadata_stale,
     read_embedding_npz,
+    read_provider_raw_zip,
+    write_blocks_jsonl,
+    write_chunks_jsonl,
     read_jsonl,
     write_embedding_npz,
     write_jsonl,
@@ -118,3 +124,52 @@ def test_stale_metadata_reports_changed_inputs():
         "pdf_sha256 changed",
         "chunking_config_sha256 changed",
     ]
+
+
+def test_canonical_artifact_api_supports_item_key_named_roundtrips(tmp_path):
+    raw = ProviderRawArtifact(
+        item_key="ITEM/1",
+        attachment_key="ATT1",
+        provider="glm",
+        payload={"pages": [{"page": 1, "text": "正文"}]},
+        files={"markdown/page-1.md": "# 正文"},
+        source_path="glm-response.json",
+    )
+
+    raw_path = write_provider_raw_zip(tmp_path, raw)
+    blocks_path = write_blocks_jsonl(
+        tmp_path,
+        "ITEM/1",
+        [{"block_id": "ATT1:p1:b1", "page": 1, "type": "paragraph", "text": "正文"}],
+    )
+    chunks_path = write_chunks_jsonl(
+        tmp_path,
+        "ITEM/1",
+        [{"chunk_id": "ATT1:c0", "block_ids": ["ATT1:p1:b1"], "text": "正文"}],
+    )
+
+    assert raw_path == artifact_path(tmp_path, "ITEM/1", "zotron-ocr.raw.zip")
+    assert blocks_path.name == "ITEM_1.zotron-blocks.jsonl"
+    assert chunks_path.name == "ITEM_1.zotron-chunks.jsonl"
+    raw_loaded = read_provider_raw_zip(raw_path)
+    assert raw_loaded["provider"]["provider"] == "glm"
+    assert raw_loaded["files"]["provider_raw.json"]["pages"][0]["text"] == "正文"
+
+
+def test_canonical_artifact_api_supports_legacy_embedding_metadata_staleness(tmp_path):
+    chunks = [
+        {"chunk_id": "ATT1:c0", "text": "first"},
+        {"chunk_id": "ATT1:c1", "text": "second"},
+    ]
+    metadata = [
+        {"chunk_id": "ATT1:c0", "text_sha256": "outdated"},
+        {"chunk_id": "ATT1:c1", "text_sha256": "fresh"},
+    ]
+
+    path = write_embedding_npz(tmp_path, "ITEM1", np.eye(2), metadata, model="legacy-test")
+    vectors, loaded_metadata, model = read_embedding_npz(path)
+
+    np.testing.assert_array_equal(vectors, np.eye(2, dtype=np.float32))
+    assert loaded_metadata == metadata
+    assert model == "legacy-test"
+    assert is_metadata_stale(loaded_metadata, chunks) is True

@@ -8,12 +8,37 @@ _BLOCK_TYPES = {
     "heading", "paragraph", "table", "figure", "equation", "caption",
     "footnote", "header", "footer", "reference", "unknown",
 }
+_EVIDENCE_TYPES = {"table", "figure", "equation", "caption"}
 
 
 def _coerce_type(value: Any) -> str:
     text = str(value or "paragraph").lower()
     aliases = {"text": "paragraph", "title": "heading", "image": "figure"}
     return aliases.get(text, text if text in _BLOCK_TYPES else "unknown")
+
+
+def _block_text(block: dict[str, Any]) -> str:
+    """Return retrieval text for a provider block without embedding binary data."""
+    text = block.get("text") or block.get("content") or block.get("markdown")
+    if text is None:
+        text = block.get("caption") or block.get("label") or block.get("alt_text")
+    return str(text or "").strip()
+
+
+def _evidence_ref(block: dict[str, Any]) -> dict[str, Any]:
+    """Return compact chunk-level evidence metadata for a normalized block."""
+    ref: dict[str, Any] = {
+        "block_id": block.get("block_id"),
+        "type": block.get("type"),
+        "page": block.get("page"),
+    }
+    if block.get("bbox") is not None:
+        ref["bbox"] = block.get("bbox")
+    if block.get("caption"):
+        ref["caption"] = block.get("caption")
+    if block.get("image_ref"):
+        ref["image_ref"] = block.get("image_ref")
+    return ref
 
 
 def _iter_structured_blocks(payload: Any):
@@ -65,10 +90,11 @@ def blocks_from_provider_payload(
     structured = list(_iter_structured_blocks(payload) or [])
     section = ""
     for _p_idx, b_idx, page_no, block, source_ref in structured:
-        text = str(block.get("text") or block.get("content") or block.get("markdown") or "").strip()
+        block_type = _coerce_type(block.get("type") or block.get("category"))
+        text = _block_text(block)
         if not text:
             continue
-        block_type = _coerce_type(block.get("type") or block.get("category"))
+        caption = str(block.get("caption") or (text if block_type in {"figure", "caption"} else ""))
         if block_type == "heading":
             section = text
         blocks.append({
@@ -81,11 +107,12 @@ def blocks_from_provider_payload(
             "reading_order": int(block.get("reading_order", b_idx)),
             "section_heading": block.get("section_heading") or section,
             "text": text,
-            "caption": block.get("caption", ""),
-            "image_ref": block.get("image_ref") or block.get("image", ""),
+            "caption": caption,
+            "image_ref": block.get("image_ref") or block.get("image") or block.get("image_path") or "",
             "source_provider": provider,
             "source_ref": source_ref,
             "confidence": block.get("confidence"),
+            "provenance_strength": "structured",
         })
     if blocks:
         return blocks
@@ -111,6 +138,7 @@ def blocks_from_provider_payload(
             "source_provider": provider,
             "source_ref": f"markdown:{para_idx}",
             "confidence": None,
+            "provenance_strength": "markdown_fallback",
         })
     return blocks
 
@@ -128,13 +156,20 @@ def chunks_from_blocks(blocks: list[dict[str, Any]], *, max_chars: int = 1000) -
         if not current:
             return
         text = "\n\n".join(str(b.get("text", "")) for b in current).strip()
-        pages = [b.get("page") for b in current if b.get("page") is not None]
+        pages: list[int] = []
+        for block in current:
+            page = block.get("page")
+            if isinstance(page, int):
+                pages.append(page)
         chunk_index = len(chunks)
+        strengths = {str(b.get("provenance_strength") or "structured") for b in current}
+        provenance_strength = strengths.pop() if len(strengths) == 1 else "mixed"
         chunks.append({
             "chunk_id": f"{attachment_key}:c{chunk_index}",
             "item_key": current[0].get("item_key"),
             "attachment_key": current[0].get("attachment_key"),
             "block_ids": [b.get("block_id") for b in current],
+            "block_types": [str(b.get("type") or "unknown") for b in current],
             "section_heading": current[0].get("section_heading", ""),
             "page_start": min(pages) if pages else None,
             "page_end": max(pages) if pages else None,
@@ -142,6 +177,8 @@ def chunks_from_blocks(blocks: list[dict[str, Any]], *, max_chars: int = 1000) -
             "char_start": 0,
             "char_end": len(text),
             "level": "chunk",
+            "evidence_refs": [_evidence_ref(b) for b in current],
+            "provenance_strength": provenance_strength,
         })
         current = []
         current_len = 0
