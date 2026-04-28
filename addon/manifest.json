@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Zotron",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "HTTP JSON-RPC API for Zotero - exposes internal API for external tools",
   "homepage_url": "https://github.com/dianzuan/zotron",
   "author": "diamondrill",
@@ -12,7 +12,7 @@
   "applications": {
     "zotero": {
       "id": "zotron@diamondrill",
-      "update_url": "https://raw.githubusercontent.com/dianzuan/zotron/main/update.json",
+      "update_url": "https://github.com/dianzuan/zotron/releases/download/release/update.json",
       "strict_min_version": "6.999",
       "strict_max_version": "9.*"
     }

@@ -62,7 +62,7 @@ zotron system version
 ## Mirror Controls
 
 ```bash
-ZOTRON_XPI_URLS='https://mirror.example/zotron.xpi https://github.com/dianzuan/zotron/releases/download/v0.1.0/zotron.xpi' \
+ZOTRON_XPI_URLS='https://mirror.example/zotron.xpi https://github.com/dianzuan/zotron/releases/download/v0.1.1/zotron.xpi' \
   bash "$CLAUDE_PLUGIN_ROOT/scripts/setup-zotron.sh"
 ```
 
