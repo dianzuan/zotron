@@ -119,9 +119,8 @@ def main() -> None:
     status_p.add_argument(
         "--collection", required=True, help="Collection name"
     )
-    run_p = sub.add_parser("run", help="Process a collection and attach OCR artifacts")
-    _add_process_flags(run_p, collection=True, item=False)
-    run_p.set_defaults(item=None)
+    run_p = sub.add_parser("run", help="Process a collection or single item and attach OCR artifacts")
+    _add_process_flags(run_p, collection=True, item=True)
 
     rebuild_p = sub.add_parser("rebuild", help="Force rebuild artifacts for one item")
     _add_process_flags(rebuild_p, collection=False, item=True)

@@ -24,6 +24,17 @@ def test_run_subcommand_processes_collection(capsys):
     assert json.loads(capsys.readouterr().out)["ok"] == 1
 
 
+def test_run_subcommand_processes_single_item(capsys):
+    proc = MagicMock()
+    proc.rpc.call.return_value = {"title": "Paper"}
+    proc.process_item.return_value = "ok"
+    with patch("zotron.ocr.cli.load_config", return_value={}), patch("zotron.ocr.cli._make_processor", return_value=proc):
+        _run_main(["run", "--item", "5443"])
+
+    proc.process_item.assert_called_once_with(5443, "Paper", force=False)
+    assert json.loads(capsys.readouterr().out) == {"item_id": 5443, "status": "ok"}
+
+
 def test_rebuild_subcommand_forces_single_item(capsys):
     proc = MagicMock()
     proc.rpc.call.return_value = {"title": "Paper"}
