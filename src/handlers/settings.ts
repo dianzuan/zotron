@@ -25,7 +25,7 @@ const SETTINGS_KEYS = [
 const KNOWN_KEYS: ReadonlySet<string> = new Set(SETTINGS_KEYS);
 
 const SETTINGS_DEFAULTS: Record<string, string | number> = {
-  "ui.language": "",
+  "ui.language": "en-US",
   "ocr.provider": "glm",
   "ocr.apiKey": "",
   "ocr.apiUrl": "https://open.bigmodel.cn/api/paas/v4/layout_parsing",

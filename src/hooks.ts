@@ -25,7 +25,7 @@ export async function onStartup() {
     "embedding.model": "doubao-embedding-vision-251215",
     "embedding.apiKey": "",
     "embedding.apiUrl": "https://ark.cn-beijing.volces.com/api/v3/embeddings/multimodal",
-    "ui.language": "",
+    "ui.language": "en-US",
   };
   for (const [key, val] of Object.entries(defaults)) {
     if (Zotero.Prefs.get(PREF + key, true) === undefined) {

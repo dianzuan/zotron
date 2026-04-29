@@ -77,6 +77,7 @@ describe("settings handler", () => {
       expect(result["embedding.provider"]).to.equal("doubao");
       expect(result["embedding.model"]).to.equal("doubao-embedding-vision-251215");
       expect(result["embedding.apiKey"]).to.equal("");
+      expect(result["ui.language"]).to.equal("en-US");
     });
   });
 

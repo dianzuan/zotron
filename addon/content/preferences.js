@@ -100,11 +100,8 @@ function setStatus(id, msg, color) {
 function currentLanguage() {
   var saved = gp("ui.language");
   if (I18N[saved]) return saved;
-  var locale = "";
-  try { locale = (Zotero.locale || navigator.language || "").toLowerCase(); } catch(e) {}
-  var lang = locale.indexOf("zh") === 0 ? "zh-CN" : "en-US";
-  sp("ui.language", lang);
-  return lang;
+  sp("ui.language", "en-US");
+  return "en-US";
 }
 
 function t(key) {
