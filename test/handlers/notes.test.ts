@@ -5,7 +5,7 @@ import { installZotero, resetZotero, fakeItem } from "../fixtures/zotero-mock";
 describe("notes handler", () => {
   afterEach(() => resetZotero());
 
-  describe("get returns serializeItem array (fix #28)", () => {
+  describe("list returns serializeItem array (renamed from get, fix #28)", () => {
     it("returns [(serializeItem)] with note body in `note` field", async () => {
       const parent: any = { id: 1, getNotes: () => [100] };
       const noteItem: any = {
@@ -27,7 +27,7 @@ describe("notes handler", () => {
       });
 
       const { notesHandlers } = await import("../../src/handlers/notes");
-      const result = await notesHandlers.get({ parentId: 1 });
+      const result = await notesHandlers.list({ parentId: 1 });
 
       expect(result).to.have.lengthOf(1);
       expect(result[0].key).to.equal("N1");
@@ -35,6 +35,48 @@ describe("notes handler", () => {
       expect(result[0]).to.have.keys("key", "version", "itemType", "title", "dateAdded", "dateModified", "note", "creators", "tags", "collections", "relations");
       // Old custom-shape keys gone:
       expect(result[0]).to.not.have.property("content");  // renamed to `note`
+    });
+  });
+
+  describe("get single note by id", () => {
+    it("returns a single note by id", async () => {
+      const noteItem: any = {
+        id: 100, key: "N1", version: 1, itemType: "note", itemTypeID: 1,
+        dateAdded: "2026-01-01", dateModified: "2026-01-01", deleted: false,
+        getField: () => "",
+        isNote: () => true, isAttachment: () => false,
+        getNote: () => "<p>Hello</p>",
+        getCreators: () => [], getTags: () => [], getCollections: () => [], getRelations: () => ({}),
+      };
+      installZotero({
+        Items: { getAsync: sinon.stub().withArgs(100).resolves(noteItem) },
+        ItemFields: { getItemTypeFields: () => [], getName: () => "" },
+        CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
+      });
+      delete require.cache[require.resolve("../../src/handlers/notes")];
+      const { notesHandlers } = await import("../../src/handlers/notes");
+      const result = await notesHandlers.get({ id: 100 });
+      expect(result.key).to.equal("N1");
+      expect(result.note).to.equal("<p>Hello</p>");
+    });
+
+    it("rejects non-note items with -32602", async () => {
+      const articleItem: any = {
+        id: 200, key: "ART200", isNote: () => false,
+      };
+      installZotero({
+        Items: { getAsync: sinon.stub().withArgs(200).resolves(articleItem) },
+      });
+      delete require.cache[require.resolve("../../src/handlers/notes")];
+      const { notesHandlers } = await import("../../src/handlers/notes");
+      try {
+        await notesHandlers.get({ id: 200 });
+        expect.fail("should have thrown");
+      } catch (e: any) {
+        expect(e.code).to.equal(-32602);
+        expect(e.message).to.include("not a note");
+      }
     });
   });
 

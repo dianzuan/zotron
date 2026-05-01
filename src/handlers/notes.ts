@@ -6,7 +6,13 @@ import { serializeItem } from "../utils/serialize";
 import { requireItem } from "../utils/guards";
 
 export const notesHandlers = {
-  async get(params: { parentId: number | string }) {
+  async get(params: { id: number | string }) {
+    const note = await requireItem(params.id);
+    if (!note.isNote()) throw { code: -32602, message: `Item ${params.id} is not a note` };
+    return serializeItem(note);
+  },
+
+  async list(params: { parentId: number | string }) {
     const parent = await requireItem(params.parentId);
     const noteIDs = parent.getNotes();
     if (noteIDs.length === 0) return [];

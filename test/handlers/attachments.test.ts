@@ -307,6 +307,49 @@ describe("attachments handler", () => {
     });
   });
 
+  describe("get single attachment by id", () => {
+    it("returns a single attachment by id", async () => {
+      const att: any = {
+        id: 50, key: "ATT50", version: 1, itemType: "attachment", itemTypeID: 14,
+        dateAdded: "2026-01-01", dateModified: "2026-01-01", deleted: false,
+        getField: () => "", isNote: () => false, isAttachment: () => true,
+        attachmentContentType: "application/pdf", attachmentLinkMode: 0,
+        getFilePathAsync: sinon.stub().resolves("/path/to/file.pdf"),
+        getCreators: () => [], getTags: () => [], getCollections: () => [], getRelations: () => ({}),
+      };
+      installZotero({
+        Items: { getAsync: sinon.stub().withArgs(50).resolves(att) },
+        ItemFields: { getItemTypeFields: () => [], getName: () => "" },
+        CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
+      });
+      delete require.cache[require.resolve("../../src/handlers/attachments")];
+      const { attachmentsHandlers } = await import("../../src/handlers/attachments");
+      const result = await attachmentsHandlers.get({ id: 50 });
+      expect(result.key).to.equal("ATT50");
+      expect(result.contentType).to.equal("application/pdf");
+      expect(result.path).to.equal("/path/to/file.pdf");
+    });
+
+    it("rejects non-attachment items with -32602", async () => {
+      const article: any = {
+        id: 99, key: "ART99", isAttachment: () => false,
+      };
+      installZotero({
+        Items: { getAsync: sinon.stub().withArgs(99).resolves(article) },
+      });
+      delete require.cache[require.resolve("../../src/handlers/attachments")];
+      const { attachmentsHandlers } = await import("../../src/handlers/attachments");
+      try {
+        await attachmentsHandlers.get({ id: 99 });
+        expect.fail("should have thrown");
+      } catch (e: any) {
+        expect(e.code).to.equal(-32602);
+        expect(e.message).to.include("not an attachment");
+      }
+    });
+  });
+
   describe("delete artifact attachments", () => {
     it("erases attachment items and rejects non-attachments", async () => {
       const eraseTx = sinon.stub().resolves();

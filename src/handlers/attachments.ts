@@ -23,6 +23,12 @@ async function serializeAttachment(item: Zotero.Item): Promise<Record<string, an
 }
 
 export const attachmentsHandlers = {
+  async get(params: { id: number | string }) {
+    const item = await requireItem(params.id);
+    if (!item.isAttachment()) throw { code: -32602, message: `Item ${params.id} is not an attachment` };
+    return serializeAttachment(item);
+  },
+
   async list(params: { parentId: number | string }) {
     const parent = await requireItem(params.parentId);
     const attIDs = parent.getAttachments();
