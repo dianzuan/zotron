@@ -43,6 +43,10 @@ from zotron.cli_search import search_app  # noqa: E402
 from zotron.cli_tags import tags_app  # noqa: E402
 from zotron.cli_export import export_app  # noqa: E402
 from zotron.cli_system import system_app  # noqa: E402
+from zotron.cli_notes import notes_app  # noqa: E402
+from zotron.cli_attachments import attachments_app  # noqa: E402
+from zotron.cli_annotations import annotations_app  # noqa: E402
+from zotron.cli_settings import settings_app  # noqa: E402
 
 app.add_typer(collections_app, name="collections")
 app.add_typer(items_app, name="items")
@@ -50,12 +54,10 @@ app.add_typer(search_app, name="search")
 app.add_typer(tags_app, name="tags")
 app.add_typer(export_app, name="export")
 app.add_typer(system_app, name="system")
-
-# New namespaces will be added here by subagents:
-# from zotron.cli_notes import notes_app
-# from zotron.cli_attachments import attachments_app
-# from zotron.cli_annotations import annotations_app
-# from zotron.cli_settings import settings_app
+app.add_typer(notes_app, name="notes")
+app.add_typer(attachments_app, name="attachments")
+app.add_typer(annotations_app, name="annotations")
+app.add_typer(settings_app, name="settings")
 
 
 # --- Backward compat aliases for helpers (used in test_cli.py) ---
