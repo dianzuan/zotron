@@ -46,7 +46,6 @@ export const systemHandlers = {
     const col = pane.getSelectedCollection();
     if (!col) return null;
     return {
-      id: col.id,
       key: col.key,
       name: col.name,
       libraryId: col.libraryID,

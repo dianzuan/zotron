@@ -59,8 +59,8 @@ def test_legacy_collection_flags_still_process_collection(capsys):
 def test_status_does_not_require_ocr_api_key(capsys):
     rpc = MagicMock()
     rpc.call.side_effect = [
-        [{"id": 3, "name": "测试集", "children": []}],
-        {"items": [{"id": 10}, {"id": 11}]},
+        [{"key": "COL3", "name": "测试集", "children": []}],
+        {"items": [{"key": "ITEM10"}, {"key": "ITEM11"}]},
         [],
         [{"tags": ["ocr"]}],
         [{"title": "ITEM.zotron-chunks.jsonl"}],
@@ -83,8 +83,8 @@ def test_status_does_not_require_ocr_api_key(capsys):
 def test_status_counts_missing_when_no_note_or_artifact(capsys):
     rpc = MagicMock()
     rpc.call.side_effect = [
-        [{"id": 3, "name": "测试集", "children": []}],
-        {"items": [{"id": 10}]},
+        [{"key": "COL3", "name": "测试集", "children": []}],
+        {"items": [{"key": "ITEM10"}]},
         [{"tags": []}],
         [],
     ]

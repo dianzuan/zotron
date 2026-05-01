@@ -257,10 +257,10 @@ def find_pdfs(
 
     missing = []
     for it in items:
-        item_id = it.get("id")
-        if item_id is None:
+        item_key = it.get("key")
+        if item_key is None:
             continue
-        attachments = cast(list[dict], rpc.call("attachments.list", {"parentId": item_id}) or [])
+        attachments = cast(list[dict], rpc.call("attachments.list", {"parentId": item_key}) or [])
         has_pdf = any(
             (a.get("contentType") or "").lower() == "application/pdf"
             or (a.get("path") or "").lower().endswith(".pdf")
@@ -273,14 +273,14 @@ def find_pdfs(
 
     results = []
     for it in missing:
-        resp = rpc.call("attachments.findPDF", {"parentId": it["id"]}) or {}
-        found = bool(resp.get("found"))
-        attachment_data = resp.get("attachment") if found else None
+        resp = rpc.call("attachments.findPDF", {"parentId": it["key"]}) or {}
+        attachment_data = resp.get("attachment")
+        found = attachment_data is not None
         results.append({
-            "item_id": it["id"],
+            "item_key": it["key"],
             "title": it.get("title"),
             "found": found,
-            "attachment_id": attachment_data.get("id") if attachment_data else None,
+            "attachment_key": attachment_data.get("key") if attachment_data else None,
         })
 
     emit_or_die(

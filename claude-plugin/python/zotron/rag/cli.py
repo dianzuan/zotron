@@ -206,7 +206,7 @@ def cmd_index(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
     skipped = 0
 
     for item in items:
-        item_id = str(item.get("id") or item.get("itemID", ""))
+        item_id = str(item.get("key", ""))
         if not item_id:
             continue
 
@@ -354,7 +354,7 @@ def _item_key_from_info(item_id: int, item_info: dict[str, Any], chunks: list[di
 def _attachment_path(rpc: ZoteroRPC, attachment: dict[str, Any]) -> Path:
     path = attachment.get("path")
     if not path:
-        result = rpc.call("attachments.getPath", {"id": attachment.get("id")})
+        result = rpc.call("attachments.getPath", {"id": attachment.get("key")})
         path = result.get("path") if isinstance(result, dict) else result
     if not path:
         raise FileNotFoundError(f"Attachment path unavailable for {attachment.get('title')!r}")
@@ -374,16 +374,16 @@ def _find_chunks_attachment_in(attachments: list[dict[str, Any]]) -> dict[str, A
     )
 
 
-def _zotero_item_ids_for_index(rpc: ZoteroRPC, args: argparse.Namespace) -> list[int]:
+def _zotero_item_ids_for_index(rpc: ZoteroRPC, args: argparse.Namespace) -> list[Any]:
     if args.item is not None:
-        return [int(args.item)]
+        return [args.item]
     if args.collection:
         collection_id = _find_collection_id(rpc, args.collection)
         if collection_id is None:
             print(json.dumps({"error": f"Collection not found: {args.collection!r}"}), file=sys.stderr)
             sys.exit(1)
         items = paginate(rpc, "collections.getItems", {"id": collection_id}, page_size=500)
-        return [int(item["id"]) for item in items if item.get("id") is not None]
+        return [item["key"] for item in items if item.get("key") is not None]
     print(json.dumps({"error": "--item or --collection is required when --zotero is used"}), file=sys.stderr)
     sys.exit(2)
 
@@ -400,7 +400,7 @@ def _index_zotero_item_artifact(
     attachments = cast(list[dict[str, Any]], rpc.call("attachments.list", {"parentId": item_id}) or [])
     chunks_attachment = _find_chunks_attachment_in(attachments)
     if chunks_attachment is None:
-        return {"item_id": item_id, "status": "skipped", "reason": "missing chunks artifact"}
+        return {"item_key": item_id, "status": "skipped", "reason": "missing chunks artifact"}
 
     chunks_path = _attachment_path(rpc, chunks_attachment)
     chunks = read_chunks_jsonl(chunks_path)
@@ -422,10 +422,10 @@ def _index_zotero_item_artifact(
     for attachment in attachments:
         if str(attachment.get("title") or "") != embedding_path.name:
             continue
-        attachment_id = attachment.get("id")
-        if attachment_id is None:
+        attachment_key = attachment.get("key")
+        if attachment_key is None:
             continue
-        rpc.call("attachments.delete", {"id": int(attachment_id)})
+        rpc.call("attachments.delete", {"id": attachment_key})
         replaced += 1
 
     attachment = rpc.call(
@@ -438,14 +438,13 @@ def _index_zotero_item_artifact(
     )
 
     return {
-        "item_id": item_id,
         "item_key": item_key,
         "status": "ok",
         "chunks": len(chunks),
-        "chunks_attachment_id": chunks_attachment.get("id"),
+        "chunks_attachment_key": chunks_attachment.get("key"),
         "embedding_title": embedding_path.name,
         "embedding_path": str(embedding_path),
-        "embedding_attachment_id": attachment.get("id") if isinstance(attachment, dict) else None,
+        "embedding_attachment_key": attachment.get("key") if isinstance(attachment, dict) else None,
         "replaced": replaced,
     }
 
@@ -622,7 +621,7 @@ def main() -> None:
     p_index_artifacts.add_argument("--artifacts-dir", help="Directory containing <item-key>.zotron-chunks.jsonl files, or an output directory with --zotero")
     p_index_artifacts.add_argument("--item-key", help="Limit indexing to one Zotero item key")
     p_index_artifacts.add_argument("--zotero", action="store_true", help="Read chunk artifacts from Zotero item attachments and attach embedding artifacts")
-    p_index_artifacts.add_argument("--item", type=int, help="Zotero item id to index when --zotero is used")
+    p_index_artifacts.add_argument("--item", help="Zotero item key to index when --zotero is used")
     p_index_artifacts.add_argument("--collection", help="Zotero collection name to index when --zotero is used")
     p_index_artifacts.add_argument("--model", help="Embedding model label to store in the artifact")
 

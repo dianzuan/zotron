@@ -260,15 +260,15 @@ def test_items_add_from_file_with_collection(mock_rpc, tmp_path):
     pdf = tmp_path / "paper.pdf"
     pdf.write_bytes(b"%PDF-1.4 fake")
     mock_rpc.call.side_effect = lambda method, params=None: {
-        "collections.list": [{"id": 5, "name": "MyCollection"}],
-        "items.addFromFile": {"id": 88},
+        "collections.list": [{"key": "COL5", "name": "MyCollection"}],
+        "items.addFromFile": {"ok": True, "key": "ITEM88"},
     }.get(method)
     result = runner.invoke(app, [
         "items", "add-from-file", str(pdf), "--collection", "MyCollection",
     ])
     assert result.exit_code == 0
     data = json.loads(result.stdout)
-    assert data["id"] == 88
+    assert data["key"] == "ITEM88"
 
 
 # ---------------------------------------------------------------------------

@@ -84,11 +84,12 @@ def test_system_creator_types(mock_rpc):
 
 
 def test_system_current_collection_returns_object(mock_rpc):
-    mock_rpc.call.return_value = {"id": 5, "name": "AI Papers", "parentID": None}
+    mock_rpc.call.return_value = {"key": "COL5", "name": "AI Papers", "libraryId": 1}
     result = runner.invoke(app, ["system", "current-collection"])
     assert result.exit_code == 0, result.stdout
     data = json.loads(result.stdout)
     assert data["name"] == "AI Papers"
+    assert data["key"] == "COL5"
 
 
 def test_system_current_collection_returns_null(mock_rpc):

@@ -113,13 +113,13 @@ def test_rag_index_artifacts_zotero_item_embeds_attached_chunks(tmp_path, capsys
 
     rpc = MagicMock()
     rpc.call.side_effect = [
-        {"id": 5443, "key": "ITEM1", "title": "Paper"},
+        {"key": "ITEM1", "title": "Paper"},
         [
-            {"id": 9001, "title": "ITEM1.zotron-chunks.jsonl", "path": str(chunks_path)},
-            {"id": 9002, "title": "ITEM1.zotron-embed.npz", "path": str(tmp_path / "old.npz")},
+            {"key": "ATT9001", "title": "ITEM1.zotron-chunks.jsonl", "path": str(chunks_path)},
+            {"key": "ATT9002", "title": "ITEM1.zotron-embed.npz", "path": str(tmp_path / "old.npz")},
         ],
-        {"ok": True, "id": 9002},
-        {"id": 9100, "title": "ITEM1.zotron-embed.npz"},
+        {"ok": True, "key": "ATT9002"},
+        {"ok": True, "key": "ATT9100", "title": "ITEM1.zotron-embed.npz"},
     ]
     mock_embedder = MagicMock()
     mock_embedder.embed_batch.return_value = [[1.0, 0.0], [0.0, 1.0]]
@@ -133,7 +133,7 @@ def test_rag_index_artifacts_zotero_item_embeds_attached_chunks(tmp_path, capsys
              "index-artifacts",
              "--zotero",
              "--item",
-             "5443",
+             "ITEM1",
              "--model",
              "test-embedding",
          ]):
@@ -141,12 +141,12 @@ def test_rag_index_artifacts_zotero_item_embeds_attached_chunks(tmp_path, capsys
 
     mock_embedder.embed_batch.assert_called_once_with(["first Zotero span", "second Zotero span"])
     delete_call = rpc.call.call_args_list[-2]
-    assert delete_call.args == ("attachments.delete", {"id": 9002})
+    assert delete_call.args == ("attachments.delete", {"id": "ATT9002"})
 
     add_call = rpc.call.call_args_list[-1]
     assert add_call.args[0] == "attachments.add"
     add_params = add_call.args[1]
-    assert add_params["parentId"] == 5443
+    assert add_params["parentId"] == "ITEM1"
     assert add_params["title"] == "ITEM1.zotron-embed.npz"
 
     vectors, metadata, model = read_embedding_npz(add_params["path"])
@@ -159,21 +159,22 @@ def test_rag_index_artifacts_zotero_item_embeds_attached_chunks(tmp_path, capsys
     assert out["indexed"] == 1
     assert out["attached"] == 1
     assert out["total_chunks"] == 2
-    assert out["items"][0]["item_id"] == 5443
+    assert out["items"][0]["item_key"] == "ITEM1"
     assert out["items"][0]["embedding_title"] == "ITEM1.zotron-embed.npz"
     assert out["items"][0]["replaced"] == 1
 
 
 def test_zotero_collection_index_uses_pagination():
     rpc = MagicMock()
+    keys = [f"K{i}" for i in range(1, 502)]
     rpc.call.side_effect = [
-        {"items": [{"id": item_id} for item_id in range(1, 501)], "total": 501},
-        {"items": [{"id": 501}], "total": 501},
+        {"items": [{"key": k} for k in keys[:500]], "total": 501},
+        {"items": [{"key": keys[500]}], "total": 501},
     ]
     args = MagicMock(item=None, collection="test")
 
     with patch("zotron.rag.cli._find_collection_id", return_value=69):
-        assert _zotero_item_ids_for_index(rpc, args) == list(range(1, 502))
+        assert _zotero_item_ids_for_index(rpc, args) == keys
 
     assert rpc.call.call_args_list[0].args == (
         "collections.getItems",

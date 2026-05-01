@@ -43,7 +43,7 @@ def cmd_status(args: argparse.Namespace, cfg: dict) -> None:
     raw = rpc.call("collections.getItems", {"id": collection_id, "limit": 500}) or {}
     items = raw.get("items", []) if isinstance(raw, dict) else raw
     total = len(items)
-    has_ocr = sum(1 for item in items if _has_ocr_result(rpc, item.get("id")))
+    has_ocr = sum(1 for item in items if _has_ocr_result(rpc, item.get("key")))
     status_result: dict[str, Any] = {
         "collection": args.collection,
         "total": total,
