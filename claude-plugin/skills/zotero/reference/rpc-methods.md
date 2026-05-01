@@ -14,7 +14,7 @@ Or directly over HTTP at `POST http://localhost:23119/zotron/rpc` with a JSON-RP
 
 | Namespace | Methods | What it does |
 |---|---|---|
-| `items.*` | 19 | CRUD on Zotero items, add by DOI/URL/ISBN/file, recent, trash, duplicates, related |
+| `items.*` | 22 | CRUD on Zotero items, add by DOI/URL/ISBN/file, recent, trash, duplicates, related, getAttachments/getNotes/getFulltext |
 | `collections.*` | 12 | List, create, rename, move, tree, items in collection |
 | `attachments.*` | 6 | List attachments, get fulltext (cache-file backed), get path, find PDF |
 | `notes.*` | 6 | Notes CRUD, annotations, search inside notes |
@@ -25,7 +25,7 @@ Or directly over HTTP at `POST http://localhost:23119/zotron/rpc` with a JSON-RP
 | `rag.*` | 2 | Zotero-native retrieval hits over attached OCR/RAG chunk artifacts |
 | `system.*` | 11 | Ping, version, libraries, switchLibrary, sync, currentCollection, `system.reload` (self-reload for dev) |
 
-Total: 79 methods.
+Total: 82 methods.
 
 ## items.*
 
@@ -49,6 +49,9 @@ Total: 79 methods.
 | `items.getRelated` | List items related to this one |
 | `items.addRelated` | Link two items as related |
 | `items.removeRelated` | Unlink related items |
+| `items.getAttachments` | List attachments for this item (convenience for `attachments.list`) |
+| `items.getNotes` | Get notes for this item (convenience for `notes.get`) |
+| `items.getFulltext` | Get PDF fulltext for a paper — auto-finds the PDF attachment |
 | `items.citationKey` | Better-BibTeX citation key for this item |
 
 ## collections.*
