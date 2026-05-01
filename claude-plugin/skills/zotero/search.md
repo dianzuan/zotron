@@ -97,7 +97,7 @@ For searching relevant passages across a collection (not full text), see [rag.md
 zotron collections tree
 
 # List items in a collection
-zotron rpc collections.getItems '{"id":COLLECTION_ID,"limit":20}'
+zotron rpc collections.getItems '{"id":"COLLECTION_KEY","limit":20}'
 ```
 
 ## Browse recent items
