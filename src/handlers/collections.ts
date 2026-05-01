@@ -81,7 +81,7 @@ export const collectionsHandlers = {
   async delete(params: { id: number }) {
     const col = await requireCollection(params.id);
     await col.eraseTx();
-    return { deleted: true, id: params.id };
+    return { ok: true, key: col.key };
   },
 
   async move(params: { id: number; newParentId: number | null }) {
@@ -96,7 +96,7 @@ export const collectionsHandlers = {
     await Zotero.DB.executeTransaction(async () => {
       await col.addItems(params.itemIds);
     });
-    return { added: params.itemIds.length, collectionId: params.id };
+    return { ok: true, key: col.key, count: params.itemIds.length };
   },
 
   async removeItems(params: { id: number; itemIds: number[] }) {
@@ -104,7 +104,7 @@ export const collectionsHandlers = {
     await Zotero.DB.executeTransaction(async () => {
       await col.removeItems(params.itemIds);
     });
-    return { collectionId: params.id, removed: params.itemIds.length };
+    return { ok: true, key: col.key, count: params.itemIds.length };
   },
 
   async stats(params: { id: number }) {
@@ -112,7 +112,7 @@ export const collectionsHandlers = {
     const items = col.getChildItems(false);
     const subcols = col.getChildCollections(false);
     return {
-      id: params.id,
+      key: col.key,
       name: col.name,
       items: items.filter((i: any) => !i.isNote() && !i.isAttachment()).length,
       attachments: items.filter((i: any) => i.isAttachment()).length,

@@ -38,7 +38,7 @@ describe("attachments handler", () => {
       expect(params).to.deep.equal([42]);
 
       expect(result).to.deep.equal({
-        id: 42,
+        key: "KEY42",
         content: "Hello world fulltext",
         indexedChars: 5000,
         totalChars: 5000,
@@ -59,7 +59,7 @@ describe("attachments handler", () => {
 
       const result = await attachmentsHandlers.getFulltext({ id: 99 });
       expect(result).to.deep.equal({
-        id: 99,
+        key: "KEY99",
         content: "",
         indexedChars: 0,
         totalChars: 0,
@@ -111,6 +111,7 @@ describe("attachments handler", () => {
         Items: { getAsync: getAsyncStub },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
       });
 
       delete require.cache[require.resolve("../../src/handlers/attachments")];
@@ -119,7 +120,7 @@ describe("attachments handler", () => {
 
       expect(result).to.have.lengthOf(2);
       // serializeItem-shape — has the standard envelope keys
-      expect(result[0]).to.include.keys("id", "key", "itemType", "title", "dateAdded", "dateModified", "creators", "tags", "collections", "relations");
+      expect(result[0]).to.include.keys("key", "version", "itemType", "title", "dateAdded", "dateModified", "creators", "tags", "collections", "relations");
       expect(result[0]).to.include({
         contentType: "application/pdf",
         linkMode: 1,
@@ -148,6 +149,7 @@ describe("attachments handler", () => {
         Attachments: { addAvailableFile: sinon.stub().withArgs(parent).resolves(pdf) },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
       });
 
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
@@ -155,7 +157,7 @@ describe("attachments handler", () => {
 
       expect(result).to.have.property("attachment");
       expect(result.attachment).to.not.be.null;
-      expect(result.attachment.id).to.equal(10);
+      expect(result.attachment.key).to.equal("P");
       // No `found` field — that was the discriminator we're dropping
       expect(result).to.not.have.property("found");
     });
@@ -204,6 +206,7 @@ describe("attachments handler", () => {
         Attachments: { importFromFile, getFileBaseNameFromItem },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
         debug: sinon.stub(),
       });
 
@@ -278,6 +281,7 @@ describe("attachments handler", () => {
         },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
         debug: sinon.stub(),
       });
 
@@ -285,7 +289,7 @@ describe("attachments handler", () => {
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
       const result = await attachmentsHandlers.add({ parentId: 1, path: fakeFile.path });
-      expect(result.id).to.equal(7);
+      expect(result.key).to.equal("A7");
     });
 
     it("file with no extension: passes baseName through unchanged", async () => {
@@ -314,7 +318,7 @@ describe("attachments handler", () => {
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
       const result = await attachmentsHandlers.delete({ id: 44 });
 
-      expect(result).to.deep.equal({ ok: true, id: 44 });
+      expect(result).to.deep.equal({ ok: true, key: "KEY44" });
       expect(eraseTx.calledOnce).to.equal(true);
     });
   });

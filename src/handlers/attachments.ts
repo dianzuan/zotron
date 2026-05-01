@@ -54,7 +54,7 @@ export const attachmentsHandlers = {
     const meta = rows[0] ?? { indexedChars: 0, totalChars: 0 };
 
     return {
-      id: item.id,
+      key: item.key,
       content: content ?? "",
       indexedChars: meta.indexedChars ?? 0,
       totalChars: meta.totalChars ?? 0,
@@ -115,7 +115,7 @@ export const attachmentsHandlers = {
       throw { code: -32602, message: `Attachment ${params.id} not found` };
     }
     const path = await item.getFilePathAsync();
-    return { id: item.id, path: path || null };
+    return { key: item.key, path: path || null };
   },
 
   async delete(params: { id: number | string }) {
@@ -124,7 +124,7 @@ export const attachmentsHandlers = {
       throw { code: -32602, message: `Attachment ${params.id} not found` };
     }
     await item.eraseTx();
-    return { ok: true, id: item.id };
+    return { ok: true, key: item.key };
   },
 
   async findPDF(params: { parentId: number | string }) {

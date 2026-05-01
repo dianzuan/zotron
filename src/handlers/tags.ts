@@ -22,7 +22,7 @@ export const tagsHandlers = {
       item.addTag(tag);
     }
     await item.saveTx();
-    return { added: params.tags.length, itemId: params.itemId };
+    return { ok: true, key: item.key };
   },
 
   async remove(params: { itemId: number; tags: string[] }) {
@@ -31,13 +31,13 @@ export const tagsHandlers = {
       item.removeTag(tag);
     }
     await item.saveTx();
-    return { removed: params.tags.length, itemId: params.itemId };
+    return { ok: true, key: item.key };
   },
 
   async rename(params: { oldName: string; newName: string; libraryId?: number }) {
     const libraryID = params.libraryId ?? Zotero.Libraries.userLibraryID;
     await Zotero.Tags.rename(libraryID, params.oldName, params.newName);
-    return { renamed: true, from: params.oldName, to: params.newName };
+    return { ok: true, tag: params.oldName, newName: params.newName };
   },
 
   async delete(params: { tag: string; libraryId?: number }) {
@@ -45,7 +45,7 @@ export const tagsHandlers = {
     const tagID = Zotero.Tags.getID(params.tag);
     if (!tagID) throw { code: -32602, message: `Tag not found: ${params.tag}` };
     await (Zotero.Tags as any).removeFromLibrary(libraryID, tagID);
-    return { deleted: true, tag: params.tag };
+    return { ok: true, tag: params.tag };
   },
 
   async batchUpdate(params: {
@@ -66,7 +66,7 @@ export const tagsHandlers = {
         await item.save();
       }
     });
-    return { added: totalAdded, removed: totalRemoved };
+    return { ok: true, added: totalAdded, removed: totalRemoved };
   },
 };
 

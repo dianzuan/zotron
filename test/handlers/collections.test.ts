@@ -103,7 +103,7 @@ describe("collections handler", () => {
         })),
       };
       installZotero({
-        Collections: { getAsync: sinon.stub().resolves(collection) },
+        Collections: { getAsync: sinon.stub().resolves(collection), get: () => null },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
       });
@@ -115,7 +115,7 @@ describe("collections handler", () => {
       expect(result).to.have.property("offset", 5);
       expect(result).to.have.property("total", 50);
       expect(result.items).to.have.lengthOf(10);
-      expect(result.items[0].id).to.equal(5); // offset
+      expect(result.items[0].key).to.equal("K5"); // offset
     });
 
     it("omits offset/limit when not provided", async () => {
@@ -124,7 +124,7 @@ describe("collections handler", () => {
         getChildItems: () => [],
       };
       installZotero({
-        Collections: { getAsync: sinon.stub().resolves(collection) },
+        Collections: { getAsync: sinon.stub().resolves(collection), get: () => null },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
       });
@@ -153,8 +153,9 @@ describe("collections handler", () => {
       const result = await collectionsHandlers.addItems({ id: 1, itemIds: [10, 20, 30] });
       expect(executeTransactionStub.calledOnce).to.equal(true);
       expect(colAddItemsStub.calledOnceWith([10, 20, 30])).to.equal(true);
-      expect(result).to.have.property("added");
-      expect(result).to.have.property("collectionId", 1);
+      expect(result).to.have.property("count");
+      expect(result).to.have.property("key", "K");
+      expect(result.ok).to.equal(true);
     });
   });
 
@@ -174,8 +175,9 @@ describe("collections handler", () => {
       const result = await collectionsHandlers.removeItems({ id: 1, itemIds: [10, 20, 30] });
       expect(executeTransactionStub.calledOnce).to.equal(true);
       expect(colRemoveItemsStub.calledOnceWith([10, 20, 30])).to.equal(true);
-      expect(result).to.have.property("removed");
-      expect(result).to.have.property("collectionId", 1);
+      expect(result).to.have.property("count");
+      expect(result).to.have.property("key", "K");
+      expect(result.ok).to.equal(true);
     });
   });
 });

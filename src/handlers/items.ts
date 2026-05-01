@@ -116,21 +116,21 @@ export const itemsHandlers = {
   async delete(params: { id: number | string }) {
     const item = await requireItem(params.id);
     await item.eraseTx();
-    return { deleted: true, id: item.id };
+    return { ok: true, key: item.key };
   },
 
   async trash(params: { id: number | string }) {
     const item = await requireItem(params.id);
     item.deleted = true;
     await item.saveTx();
-    return { trashed: true, id: item.id };
+    return { ok: true, key: item.key };
   },
 
   async restore(params: { id: number | string }) {
     const item = await requireItem(params.id);
     item.deleted = false;
     await item.saveTx();
-    return { restored: true, id: item.id };
+    return { ok: true, key: item.key };
   },
 
   async getTrash(params: { limit?: number; offset?: number }) {
@@ -145,17 +145,17 @@ export const itemsHandlers = {
 
   async batchTrash(params: { ids: number[] }) {
     const items = await Zotero.Items.getAsync(params.ids);
-    const ids: number[] = [];
+    const keys: string[] = [];
     for (const item of items) {
       item.deleted = true;
     }
     await Zotero.DB.executeTransaction(async () => {
       for (const item of items) {
         await item.save();
-        ids.push(item.id);
+        keys.push(item.key);
       }
     });
-    return { trashed: ids.length, ids };
+    return { ok: true, keys, count: keys.length };
   },
 
   async getRecent(params: { limit?: number; offset?: number; type?: "added" | "modified" }) {
@@ -292,7 +292,7 @@ export const itemsHandlers = {
     await item.saveTx();
     related.addRelatedItem(item);
     await related.saveTx();
-    return { added: true, id: params.id };
+    return { ok: true, key: item.key };
   },
 
   async removeRelated(params: { id: number | string; relatedId: number | string }) {
@@ -302,7 +302,7 @@ export const itemsHandlers = {
     await item.saveTx();
     related.removeRelatedItem(item);
     await related.saveTx();
-    return { removed: true, id: params.id };
+    return { ok: true, key: item.key };
   },
 
   async citationKey(params: { id: number | string }) {
@@ -311,7 +311,7 @@ export const itemsHandlers = {
     const extra = item.getField("extra") as string;
     const match = extra?.match(/Citation Key:\s*(\S+)/i);
     const key = match ? match[1] : `${item.getCreators()[0]?.lastName || "Unknown"}${extractYear(item)}`;
-    return { id: params.id, citationKey: key };
+    return { key: item.key, citationKey: key };
   },
 };
 

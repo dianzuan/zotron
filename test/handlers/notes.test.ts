@@ -23,15 +23,16 @@ describe("notes handler", () => {
         Items: { getAsync: getAsyncStub },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
       });
 
       const { notesHandlers } = await import("../../src/handlers/notes");
       const result = await notesHandlers.get({ parentId: 1 });
 
       expect(result).to.have.lengthOf(1);
-      expect(result[0].id).to.equal(100);
+      expect(result[0].key).to.equal("N1");
       expect(result[0].note).to.equal("<p>Hello note</p>");  // from T0 upgrade
-      expect(result[0]).to.have.keys("id", "key", "itemType", "title", "dateAdded", "dateModified", "deleted", "note", "creators", "tags", "collections", "relations");
+      expect(result[0]).to.have.keys("key", "version", "itemType", "title", "dateAdded", "dateModified", "note", "creators", "tags", "collections", "relations");
       // Old custom-shape keys gone:
       expect(result[0]).to.not.have.property("content");  // renamed to `note`
     });
@@ -60,6 +61,7 @@ describe("notes handler", () => {
         Items: { getAsync: sinon.stub().withArgs([100]).resolves([noteItem]) },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
       });
 
       const { notesHandlers } = await import("../../src/handlers/notes");
@@ -89,12 +91,13 @@ describe("notes handler", () => {
         Items: { getAsync: sinon.stub().withArgs(100).resolves(noteItem) },
         ItemFields: { getItemTypeFields: () => [], getName: () => "" },
         CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
       });
 
       const { notesHandlers } = await import("../../src/handlers/notes");
       const result = await notesHandlers.update({ id: 100, content: "<p>Updated body</p>" });
 
-      expect(result.id).to.equal(100);
+      expect(result.key).to.equal("N1");
       expect(result.note).to.equal("<p>Updated body</p>");
       expect(result).to.not.have.property("updated");  // old shape's flag is gone
     });
