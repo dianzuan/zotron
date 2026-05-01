@@ -145,10 +145,17 @@ describe("collections handler", () => {
         id: 1, key: "K", name: "Test",
         addItems: colAddItemsStub,
       };
+      const getAsyncStub = sinon.stub();
+      getAsyncStub.withArgs(10).resolves({ id: 10 });
+      getAsyncStub.withArgs(20).resolves({ id: 20 });
+      getAsyncStub.withArgs(30).resolves({ id: 30 });
       installZotero({
         Collections: { getAsync: sinon.stub().resolves(collection) },
+        Items: { getAsync: getAsyncStub },
         DB: { executeTransaction: executeTransactionStub },
       });
+      delete require.cache[require.resolve("../../src/utils/guards")];
+      delete require.cache[require.resolve("../../src/handlers/collections")];
       const { collectionsHandlers } = await import("../../src/handlers/collections");
       const result = await collectionsHandlers.addItems({ id: 1, itemIds: [10, 20, 30] });
       expect(executeTransactionStub.calledOnce).to.equal(true);
@@ -167,10 +174,17 @@ describe("collections handler", () => {
         id: 1, key: "K", name: "Test",
         removeItems: colRemoveItemsStub,
       };
+      const getAsyncStub = sinon.stub();
+      getAsyncStub.withArgs(10).resolves({ id: 10 });
+      getAsyncStub.withArgs(20).resolves({ id: 20 });
+      getAsyncStub.withArgs(30).resolves({ id: 30 });
       installZotero({
         Collections: { getAsync: sinon.stub().resolves(collection) },
+        Items: { getAsync: getAsyncStub },
         DB: { executeTransaction: executeTransactionStub },
       });
+      delete require.cache[require.resolve("../../src/utils/guards")];
+      delete require.cache[require.resolve("../../src/handlers/collections")];
       const { collectionsHandlers } = await import("../../src/handlers/collections");
       const result = await collectionsHandlers.removeItems({ id: 1, itemIds: [10, 20, 30] });
       expect(executeTransactionStub.calledOnce).to.equal(true);

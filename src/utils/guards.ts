@@ -49,3 +49,16 @@ export async function requireCollection(idOrKey: number | string): Promise<Zoter
   if (!col) throw rpcError(INVALID_PARAMS, `Collection ${idOrKey} not found`);
   return col;
 }
+
+/**
+ * Resolve a mixed array of numeric IDs and 8-char alphanumeric keys to Items.
+ * Delegates to `requireItem` for each entry, so callers can freely pass
+ * `[42, "YR5BUGHG", 7]` and get back `Zotero.Item[]`.
+ */
+export async function resolveItems(idsOrKeys: (number | string)[]): Promise<Zotero.Item[]> {
+  const items: Zotero.Item[] = [];
+  for (const idOrKey of idsOrKeys) {
+    items.push(await requireItem(idOrKey));
+  }
+  return items;
+}

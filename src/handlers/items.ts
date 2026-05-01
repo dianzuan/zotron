@@ -5,7 +5,7 @@ import { registerHandlers } from "../server";
 import { splitChineseName, CJK_REGEX } from "../utils/chinese-name";
 import { serializeItem } from "../utils/serialize";
 import { extractYear } from "../utils/citation-key";
-import { requireItem } from "../utils/guards";
+import { requireItem, resolveItems } from "../utils/guards";
 
 /** Auto-split a creator's CJK name when firstName is empty and lastName
  *  contains 2+ CJK characters. Callers that pre-split (firstName set) pass
@@ -143,8 +143,8 @@ export const itemsHandlers = {
     return { items: items.map(serializeItem), total: trashedIDs.length, limit, offset };
   },
 
-  async batchTrash(params: { ids: number[] }) {
-    const items = await Zotero.Items.getAsync(params.ids);
+  async batchTrash(params: { ids: (number | string)[] }) {
+    const items = await resolveItems(params.ids);
     const keys: string[] = [];
     for (const item of items) {
       item.deleted = true;
@@ -262,11 +262,11 @@ export const itemsHandlers = {
     return { groups, totalGroups: groups.length };
   },
 
-  async mergeDuplicates(params: { ids: number[] }) {
+  async mergeDuplicates(params: { ids: (number | string)[] }) {
     if (params.ids.length < 2) {
       throw { code: -32602, message: "Need at least 2 item IDs to merge" };
     }
-    const items = await Zotero.Items.getAsync(params.ids);
+    const items = await resolveItems(params.ids);
     const master = items[0];
     for (let i = 1; i < items.length; i++) {
       await Zotero.Items.merge(master, [items[i]]);

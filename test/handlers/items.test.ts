@@ -92,12 +92,17 @@ describe("items handler", () => {
       const items = [1, 2, 3].map((id) => ({
         id, key: `K${id}`, deleted: false, save: sinon.stub().resolves(),
       }));
+      const getAsyncStub = sinon.stub();
+      getAsyncStub.withArgs(1).resolves(items[0]);
+      getAsyncStub.withArgs(2).resolves(items[1]);
+      getAsyncStub.withArgs(3).resolves(items[2]);
       installZotero({
-        Items: { getAsync: sinon.stub().resolves(items) },
+        Items: { getAsync: getAsyncStub },
         DB: { executeTransaction: sinon.stub().callsFake((cb: () => Promise<void>) => cb()) },
       });
 
       delete require.cache[require.resolve("../../src/handlers/items")];
+      delete require.cache[require.resolve("../../src/utils/guards")];
       const { itemsHandlers } = await import("../../src/handlers/items");
 
       const result = await itemsHandlers.batchTrash({ ids: [1, 2, 3] });
@@ -374,6 +379,38 @@ describe("items handler", () => {
 
       const [sql] = queryStub.firstCall.args;
       expect(sql).to.match(/ORDER BY dateModified DESC/i);
+    });
+  });
+
+  describe("batchTrash accepts string keys (Task 5)", () => {
+    it("resolves string keys via getByLibraryAndKeyAsync and trashes the items", async () => {
+      const item1 = {
+        id: 1, key: "KEY00001", deleted: false, save: sinon.stub().resolves(),
+      };
+      const item2 = {
+        id: 2, key: "KEY00002", deleted: false, save: sinon.stub().resolves(),
+      };
+      const getByKeyStub = sinon.stub();
+      getByKeyStub.withArgs(1, "KEY00001").resolves(item1);
+      getByKeyStub.withArgs(1, "KEY00002").resolves(item2);
+      installZotero({
+        Items: {
+          getAsync: sinon.stub().resolves(null),
+          getByLibraryAndKeyAsync: getByKeyStub,
+        },
+        Libraries: { userLibraryID: 1 },
+        DB: { executeTransaction: sinon.stub().callsFake(async (fn: any) => fn()) },
+        Collections: { get: () => null },
+      });
+      delete require.cache[require.resolve("../../src/handlers/items")];
+      delete require.cache[require.resolve("../../src/utils/guards")];
+      const { itemsHandlers } = await import("../../src/handlers/items");
+      const result = await itemsHandlers.batchTrash({ ids: ["KEY00001", "KEY00002"] });
+      expect(result.ok).to.equal(true);
+      expect(result.count).to.equal(2);
+      expect(result.keys).to.deep.equal(["KEY00001", "KEY00002"]);
+      expect(item1.deleted).to.equal(true);
+      expect(item2.deleted).to.equal(true);
     });
   });
 

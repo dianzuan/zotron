@@ -49,14 +49,13 @@ export const tagsHandlers = {
   },
 
   async batchUpdate(params: {
-    operations: Array<{ itemId: number; add?: string[]; remove?: string[] }>;
+    operations: Array<{ itemId: number | string; add?: string[]; remove?: string[] }>;
   }) {
     let totalAdded = 0;
     let totalRemoved = 0;
     await Zotero.DB.executeTransaction(async () => {
       for (const op of params.operations) {
-        const item = await Zotero.Items.getAsync(op.itemId);
-        if (!item) continue;
+        const item = await requireItem(op.itemId);
         if (op.add) {
           for (const tag of op.add) { item.addTag(tag); totalAdded++; }
         }

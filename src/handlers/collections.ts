@@ -3,7 +3,7 @@
 // zotron/src/handlers/collections.ts
 import { registerHandlers } from "../server";
 import { serializeCollection, serializeItem } from "../utils/serialize";
-import { requireCollection } from "../utils/guards";
+import { requireCollection, resolveItems } from "../utils/guards";
 
 function buildTree(collections: Zotero.Collection[]): any[] {
   const map = new Map<number, any>();
@@ -91,20 +91,24 @@ export const collectionsHandlers = {
     return serializeCollection(col);
   },
 
-  async addItems(params: { id: number; itemIds: number[] }) {
+  async addItems(params: { id: number | string; itemIds: (number | string)[] }) {
     const col = await requireCollection(params.id);
+    const items = await resolveItems(params.itemIds);
+    const numericIds = items.map(i => i.id);
     await Zotero.DB.executeTransaction(async () => {
-      await col.addItems(params.itemIds);
+      await col.addItems(numericIds);
     });
-    return { ok: true, key: col.key, count: params.itemIds.length };
+    return { ok: true, key: col.key, count: numericIds.length };
   },
 
-  async removeItems(params: { id: number; itemIds: number[] }) {
+  async removeItems(params: { id: number | string; itemIds: (number | string)[] }) {
     const col = await requireCollection(params.id);
+    const items = await resolveItems(params.itemIds);
+    const numericIds = items.map(i => i.id);
     await Zotero.DB.executeTransaction(async () => {
-      await col.removeItems(params.itemIds);
+      await col.removeItems(numericIds);
     });
-    return { ok: true, key: col.key, count: params.itemIds.length };
+    return { ok: true, key: col.key, count: numericIds.length };
   },
 
   async stats(params: { id: number }) {
