@@ -15,7 +15,7 @@ runner = CliRunner()
 def mock_rpc():
     """Patch ZoteroRPC at the module level. Returns the MagicMock instance
     so individual tests can configure .call responses."""
-    with patch("zotron.cli.ZoteroRPC") as mock_cls:
+    with patch("zotron._cli_base.ZoteroRPC") as mock_cls:
         instance = MagicMock()
         mock_cls.return_value = instance
         yield instance
