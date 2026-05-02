@@ -10,7 +10,7 @@ import json
 import sys
 from dataclasses import asdict
 from pathlib import Path
-from typing import Literal, NoReturn, cast
+from typing import Literal, cast
 
 import typer
 
@@ -23,7 +23,6 @@ from zotron._cli_base import (
     resolve_or_die,
     rpc_or_die,
 )
-from zotron._output import emit
 from zotron.errors import (
     CollectionAmbiguous,
     CollectionNotFound,
@@ -31,7 +30,6 @@ from zotron.errors import (
     ZotronError,
 )
 from zotron.push import push_item, resolve_collection
-from zotron.rpc import ZoteroRPC
 
 # Re-export for backward compat (test_cli.py imports `from zotron.cli import app`)
 __all__ = ["app"]
