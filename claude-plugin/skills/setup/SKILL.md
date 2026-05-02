@@ -29,20 +29,28 @@ Tools -> Plugins -> Zotron -> gear icon -> Check for Updates -> restart Zotero
 command -v uv >/dev/null || echo "MISSING_UV"
 ```
 
-2. Resolve the plugin root and run the setup script.
+2. Reinstall the CLI from the plugin's bundled source to ensure it matches the plugin version.
 
 ```bash
 PLUGIN_ROOT="${CODEX_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-}}"
+uv tool install --force --editable "$PLUGIN_ROOT/python"
+```
+
+This ensures `zotron`, `zotron-rag`, and `zotron-ocr` binaries are up to date. The plugin update only refreshes skill docs — the CLI binary must be reinstalled separately.
+
+3. Run the setup script.
+
+```bash
 bash "$PLUGIN_ROOT/scripts/setup-zotron.sh"
 ```
 
-3. If the bridge is live at the expected version, stop.
+4. If the bridge is live at the expected version, stop.
 
-4. If the bridge is live but the plugin version is older, tell the user to update inside Zotero using the update flow above.
+5. If the bridge is live but the plugin version is older, tell the user to update inside Zotero using the update flow above.
 
-5. If the bridge is down, the script downloads or stages `zotron.xpi` into the user's real Downloads folder and prints the path as Zotero will see it.
+6. If the bridge is down, the script downloads or stages `zotron.xpi` into the user's real Downloads folder and prints the path as Zotero will see it.
 
-6. Tell the user:
+7. Tell the user:
 
 ```text
 In Zotero:
@@ -52,11 +60,12 @@ In Zotero:
 4. Install, then restart Zotero
 ```
 
-7. After restart, verify:
+8. After restart, verify:
 
 ```bash
 zotron ping
 zotron system version
+zotron --help  # should show all 14 command groups
 ```
 
 ## Mirror Controls
