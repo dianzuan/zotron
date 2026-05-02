@@ -193,7 +193,7 @@ def test_notes_delete_returns_ok(mock_rpc):
     data = json.loads(result.stdout)
     assert data["ok"] is True
     assert data["key"] == "KEY0042"
-    mock_rpc.call.assert_called_once_with("notes.delete", {"id": "42"})
+    mock_rpc.call.assert_called_once_with("items.delete", {"id": "42"})
 
 
 def test_notes_delete_dry_run(mock_rpc):
@@ -201,7 +201,7 @@ def test_notes_delete_dry_run(mock_rpc):
     assert result.exit_code == 0
     data = json.loads(result.stdout)
     assert data["dryRun"] is True
-    assert data["wouldCall"] == "notes.delete"
+    assert data["wouldCall"] == "items.delete"
     assert data["wouldCallParams"] == {"id": "99"}
     mock_rpc.call.assert_not_called()
 

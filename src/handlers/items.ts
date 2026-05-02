@@ -310,6 +310,55 @@ export const itemsHandlers = {
     return { ok: true, key: item.key };
   },
 
+  async list(params: { limit?: number; offset?: number; sort?: string; direction?: string }) {
+    const libraryID = Zotero.Libraries.userLibraryID;
+    const limit = params.limit ?? 50;
+    const offset = params.offset ?? 0;
+    const sortColumn = params.sort === "dateModified" ? "dateModified" : "dateAdded";
+    const sortDir = params.direction === "asc" ? "ASC" : "DESC";
+    const sql = `SELECT itemID FROM items
+                 WHERE libraryID=?
+                   AND itemTypeID NOT IN (
+                     SELECT itemTypeID FROM itemTypes WHERE typeName IN ('note', 'attachment'))
+                   AND itemID NOT IN (SELECT itemID FROM deletedItems)
+                 ORDER BY ${sortColumn} ${sortDir} LIMIT ? OFFSET ?`;
+    const ids: number[] = await Zotero.DB.columnQueryAsync(sql, [libraryID, limit, offset]);
+    const items = ids.length > 0 ? await Zotero.Items.getAsync(ids) : [];
+    return {
+      items: items.map(serializeItem),
+      total: items.length,
+      limit,
+      offset,
+    };
+  },
+
+  async getFullText(params: { id: number | string }) {
+    const item = await requireItem(params.id);
+    const attIDs = item.getAttachments ? item.getAttachments() : [];
+    for (const attID of attIDs) {
+      const att = await Zotero.Items.getAsync(attID);
+      if (att && att.isAttachment() && (att as any).attachmentContentType === "application/pdf") {
+        const cacheFile = Zotero.Fulltext.getItemCacheFile(att);
+        let content = "";
+        try {
+          content = (await Zotero.File.getContentsAsync(cacheFile.path) as string) ?? "";
+        } catch { content = ""; }
+        const rows = ((await Zotero.DB.queryAsync(
+          "SELECT indexedChars, totalChars FROM fulltextItems WHERE itemID=?",
+          [att.id],
+        )) as Array<{ indexedChars: number; totalChars: number }>) ?? [];
+        const meta = rows[0] ?? { indexedChars: 0, totalChars: 0 };
+        return {
+          key: att.key,
+          content: content ?? "",
+          indexedChars: meta.indexedChars ?? 0,
+          totalChars: meta.totalChars ?? 0,
+        };
+      }
+    }
+    return { key: item.key, content: "", indexedChars: 0, totalChars: 0 };
+  },
+
   async citationKey(params: { id: number | string }) {
     const item = await requireItem(params.id);
     // Try Better BibTeX citation key if available

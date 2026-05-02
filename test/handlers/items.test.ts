@@ -418,6 +418,110 @@ describe("items handler", () => {
     });
   });
 
+  describe("list returns paginated items envelope", () => {
+    it("returns {items, total, limit, offset} with correct defaults", async () => {
+      const itemIDs = [1, 2];
+      const items = itemIDs.map((id) => ({
+        id, key: `K${id}`, itemType: "journalArticle", itemTypeID: 1,
+        dateAdded: "", dateModified: "", deleted: false,
+        getField: () => "", isNote: () => false, isAttachment: () => false,
+        getCreators: () => [], getTags: () => [], getCollections: () => [], getRelations: () => ({}),
+      }));
+
+      installZotero({
+        Libraries: { userLibraryID: 1 },
+        DB: { columnQueryAsync: sinon.stub().resolves(itemIDs) },
+        Items: { getAsync: sinon.stub().withArgs(itemIDs).resolves(items) },
+        ItemFields: { getItemTypeFields: () => [], getName: () => "" },
+        CreatorTypes: { getName: () => "author" },
+        Collections: { get: () => null },
+      });
+
+      const { itemsHandlers } = await import("../../src/handlers/items");
+      const result = await itemsHandlers.list({});
+
+      expect(result).to.have.keys("items", "total", "limit", "offset");
+      expect(result.limit).to.equal(50);
+      expect(result.offset).to.equal(0);
+      expect(result.items).to.have.lengthOf(2);
+    });
+
+    it("passes sort and direction to SQL", async () => {
+      const queryStub = sinon.stub().resolves([]);
+      installZotero({
+        Libraries: { userLibraryID: 1 },
+        DB: { columnQueryAsync: queryStub },
+        Items: { getAsync: sinon.stub().resolves([]) },
+      });
+
+      const { itemsHandlers } = await import("../../src/handlers/items");
+      await itemsHandlers.list({ sort: "dateModified", direction: "asc", limit: 10, offset: 5 });
+
+      const [sql, sqlParams] = queryStub.firstCall.args;
+      expect(sql).to.match(/ORDER BY dateModified ASC/i);
+      expect(sql).to.match(/LIMIT/i);
+      expect(sqlParams).to.deep.equal([1, 10, 5]);
+    });
+  });
+
+  describe("getFullText finds PDF attachment and returns fulltext", () => {
+    it("finds first PDF attachment and returns its fulltext content", async () => {
+      const parentItem: any = {
+        id: 10, key: "PARENT",
+        getAttachments: () => [20, 21],
+      };
+      const pdfAtt: any = {
+        id: 20, key: "PDF20",
+        isAttachment: () => true,
+        attachmentContentType: "application/pdf",
+      };
+      const otherAtt: any = {
+        id: 21, key: "OTHER21",
+        isAttachment: () => true,
+        attachmentContentType: "text/html",
+      };
+      const cacheFile = { path: "/tmp/cache/20" };
+
+      const getAsyncStub = sinon.stub();
+      getAsyncStub.withArgs(10).resolves(parentItem);
+      getAsyncStub.withArgs(20).resolves(pdfAtt);
+      getAsyncStub.withArgs(21).resolves(otherAtt);
+
+      installZotero({
+        Items: { getAsync: getAsyncStub },
+        Fulltext: { getItemCacheFile: sinon.stub().returns(cacheFile) },
+        File: { getContentsAsync: sinon.stub().resolves("Full text content here") },
+        DB: { queryAsync: sinon.stub().resolves([{ indexedChars: 1000, totalChars: 1000 }]) },
+      });
+
+      const { itemsHandlers } = await import("../../src/handlers/items");
+      const result = await itemsHandlers.getFullText({ id: 10 });
+
+      expect(result.key).to.equal("PDF20");
+      expect(result.content).to.equal("Full text content here");
+      expect(result.indexedChars).to.equal(1000);
+      expect(result.totalChars).to.equal(1000);
+    });
+
+    it("returns empty content when item has no PDF attachments", async () => {
+      const parentItem: any = {
+        id: 30, key: "NOATT",
+        getAttachments: () => [],
+      };
+      installZotero({
+        Items: { getAsync: sinon.stub().withArgs(30).resolves(parentItem) },
+      });
+
+      const { itemsHandlers } = await import("../../src/handlers/items");
+      const result = await itemsHandlers.getFullText({ id: 30 });
+
+      expect(result.key).to.equal("NOATT");
+      expect(result.content).to.equal("");
+      expect(result.indexedChars).to.equal(0);
+      expect(result.totalChars).to.equal(0);
+    });
+  });
+
   describe("citationKey on items namespace (fix #52 relocation)", () => {
     it("returns {citationKey, id} when called as items.citationKey", async () => {
       const item: any = {

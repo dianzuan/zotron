@@ -103,9 +103,9 @@ def notes_delete(
     """Delete a note by ID."""
     params: dict = {"id": note_id}
     if dry_run_flag:
-        dry_run("notes.delete", params)
+        dry_run("items.delete", params)
     rpc = new_rpc(url)
-    typer.echo(json.dumps(rpc_or_die(rpc, "notes.delete", params), ensure_ascii=False))
+    typer.echo(json.dumps(rpc_or_die(rpc, "items.delete", params), ensure_ascii=False))
 
 
 @notes_app.command(

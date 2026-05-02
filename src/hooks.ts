@@ -8,6 +8,7 @@ import "./handlers/collections";
 import "./handlers/tags";
 import "./handlers/attachments";
 import "./handlers/notes";
+import "./handlers/annotations";
 import "./handlers/export";
 import "./handlers/settings";
 import "./handlers/rag";
