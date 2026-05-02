@@ -29,12 +29,12 @@ export const collectionsHandlers = {
     return cols.map(serializeCollection);
   },
 
-  async get(params: { id: number }) {
+  async get(params: { id: number | string }) {
     const col = await requireCollection(params.id);
     return serializeCollection(col);
   },
 
-  async getItems(params: { id: number; limit?: number; offset?: number }) {
+  async getItems(params: { id: number | string; limit?: number; offset?: number }) {
     const col = await requireCollection(params.id);
     const allItems = col.getChildItems(false) || [];
     const offset = params.offset ?? 0;
@@ -50,7 +50,7 @@ export const collectionsHandlers = {
     return result;
   },
 
-  async getSubcollections(params: { id: number }) {
+  async getSubcollections(params: { id: number | string }) {
     const col = await requireCollection(params.id);
     const children = col.getChildCollections(false);
     return children.map(serializeCollection);
@@ -71,20 +71,20 @@ export const collectionsHandlers = {
     return serializeCollection(col);
   },
 
-  async rename(params: { id: number; name: string }) {
+  async rename(params: { id: number | string; name: string }) {
     const col = await requireCollection(params.id);
     col.name = params.name;
     await col.saveTx();
     return serializeCollection(col);
   },
 
-  async delete(params: { id: number }) {
+  async delete(params: { id: number | string }) {
     const col = await requireCollection(params.id);
     await col.eraseTx();
     return { ok: true, key: col.key };
   },
 
-  async move(params: { id: number; newParentId: number | null }) {
+  async move(params: { id: number | string; newParentId: number | null }) {
     const col = await requireCollection(params.id);
     (col as any).parentID = params.newParentId || false;
     await col.saveTx();
@@ -111,7 +111,7 @@ export const collectionsHandlers = {
     return { ok: true, key: col.key, count: numericIds.length };
   },
 
-  async stats(params: { id: number }) {
+  async stats(params: { id: number | string }) {
     const col = await requireCollection(params.id);
     const items = col.getChildItems(false);
     const subcols = col.getChildCollections(false);

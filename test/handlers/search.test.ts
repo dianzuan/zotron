@@ -32,7 +32,8 @@ describe("search handler", () => {
 
       expect(getAllStub.calledOnceWith(1)).to.equal(true);
       expect(result).to.have.lengthOf(1);
-      expect(result[0].id).to.equal(1);
+      expect(result[0]).to.not.have.property("id");
+      expect(result[0].key).to.equal("S1");
       expect(result[0].name).to.equal("My Search");
     });
   });
@@ -171,7 +172,7 @@ describe("search handler", () => {
   });
 
   describe("createSavedSearch returns key (fix #37)", () => {
-    it("returns {id, key, name}", async () => {
+    it("returns {ok, key, name} without id", async () => {
       const fakeSavedSearch: any = {
         id: 42, key: "SS42",
         addCondition: sinon.stub(),
@@ -189,7 +190,8 @@ describe("search handler", () => {
       const result = await searchHandlers.createSavedSearch({
         name: "My Saved", conditions: [{ field: "title", op: "contains", value: "x" }],
       });
-      expect(result).to.have.property("id", 42);
+      expect(result).to.not.have.property("id");
+      expect(result).to.have.property("ok", true);
       expect(result).to.have.property("key", "SS42");
       expect(result).to.have.property("name", "My Saved");
     });

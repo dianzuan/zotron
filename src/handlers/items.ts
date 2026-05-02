@@ -259,7 +259,12 @@ export const itemsHandlers = {
       for (const sid of set) seen.add(sid);
       if (set.length > 1) groups.push(set);  // groups of 1 are not duplicates
     }
-    return { groups, totalGroups: groups.length };
+    const keyGroups: string[][] = [];
+    for (const group of groups) {
+      const items = await Zotero.Items.getAsync(group);
+      keyGroups.push(items.map((i: any) => i.key));
+    }
+    return { groups: keyGroups, totalGroups: keyGroups.length };
   },
 
   async mergeDuplicates(params: { ids: (number | string)[] }) {

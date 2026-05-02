@@ -84,7 +84,6 @@ export const searchHandlers = {
     const libraryID = Zotero.Libraries.userLibraryID;
     const searches = await (Zotero.Searches as any).getAll(libraryID);
     return searches.map((s: any) => ({
-      id: s.id,
       key: s.key,
       name: s.name,
       conditions: s.getConditions(),
@@ -101,14 +100,15 @@ export const searchHandlers = {
       s.addCondition(cond.field as any, cond.op as any, cond.value);
     }
     await s.saveTx();
-    return { id: s.id, key: s.key, name: s.name };
+    return { ok: true, key: s.key, name: s.name };
   },
 
   async deleteSavedSearch(params: { id: number }) {
     const s = await Zotero.Searches.getAsync(params.id);
     if (!s) throw { code: -32602, message: `Saved search ${params.id} not found` };
+    const key = (s as any).key;
     await s.eraseTx();
-    return { deleted: true, id: params.id };
+    return { ok: true, key };
   },
 };
 

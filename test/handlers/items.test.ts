@@ -50,7 +50,7 @@ describe("items handler", () => {
   });
 
   describe("findDuplicates (fix #5)", () => {
-    it("returns proper groups via per-itemID enumeration — NOT empty arrays", async () => {
+    it("returns key groups via per-itemID enumeration — NOT numeric ID arrays", async () => {
       // Simulate a duplicate set: items 1, 2 are dupes; 3 alone; 4, 5, 6 are dupes.
       const sets: Record<number, number[]> = {
         1: [1, 2], 2: [1, 2],
@@ -62,6 +62,10 @@ describe("items handler", () => {
       const getSearchObjectStub = sinon.stub().resolves(searchStub);
       const getSetItemsByItemIDStub = sinon.stub().callsFake((id: number) => sets[id]);
 
+      const getAsyncStub = sinon.stub().callsFake((ids: number[]) =>
+        Promise.resolve(ids.map(id => ({ id, key: `K${id}` })))
+      );
+
       installZotero({
         Libraries: { userLibraryID: 1 },
         Duplicates: function (libraryID: number) {
@@ -70,6 +74,7 @@ describe("items handler", () => {
             getSetItemsByItemID: getSetItemsByItemIDStub,
           };
         } as any,
+        Items: { getAsync: getAsyncStub },
       });
 
       delete require.cache[require.resolve("../../src/handlers/items")];
@@ -77,13 +82,12 @@ describe("items handler", () => {
 
       const result = await itemsHandlers.findDuplicates();
 
-      // Expected: 2 groups (the [1,2] pair and the [4,5,6] triple); item 3 is solo.
-      // The PRD §3.1 keeps findDuplicates' shape as {groups, totalGroups}.
+      // Expected: 2 groups (the [K1,K2] pair and the [K4,K5,K6] triple); item 3 is solo.
       expect(result.totalGroups).to.equal(2);
       expect(result.groups).to.have.lengthOf(2);
-      const sorted = result.groups.map((g: number[]) => [...g].sort((a, b) => a - b));
-      expect(sorted).to.deep.include([1, 2]);
-      expect(sorted).to.deep.include([4, 5, 6]);
+      const sorted = result.groups.map((g: string[]) => [...g].sort());
+      expect(sorted).to.deep.include(["K1", "K2"]);
+      expect(sorted).to.deep.include(["K4", "K5", "K6"]);
     });
   });
 

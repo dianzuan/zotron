@@ -30,7 +30,7 @@ export const notesHandlers = {
       for (const tag of params.tags) note.addTag(tag);
     }
     await note.saveTx();
-    return { key: note.key };
+    return { ok: true, key: note.key };
   },
 
   async update(params: { id: number | string; content: string }) {
