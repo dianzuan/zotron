@@ -23,7 +23,7 @@ def find_by_name(rpc: Any, name: str) -> int | str | None:
     return _search_tree(tree, name)
 
 
-def _search_tree(nodes: list[dict], name: str) -> int | str | None:
+def _search_tree(nodes: list[dict], name: str) -> str | None:
     for node in nodes:
         if node.get("name") == name:
             return node.get("key")

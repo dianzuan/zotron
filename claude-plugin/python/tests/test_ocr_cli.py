@@ -31,8 +31,8 @@ def test_run_subcommand_processes_single_item(capsys):
     with patch("zotron.ocr.cli.load_config", return_value={}), patch("zotron.ocr.cli._make_processor", return_value=proc):
         _run_main(["run", "--item", "5443"])
 
-    proc.process_item.assert_called_once_with(5443, "Paper", force=False)
-    assert json.loads(capsys.readouterr().out) == {"item_id": 5443, "status": "ok"}
+    proc.process_item.assert_called_once_with("5443", "Paper", force=False)
+    assert json.loads(capsys.readouterr().out) == {"item_id": "5443", "status": "ok"}
 
 
 def test_rebuild_subcommand_forces_single_item(capsys):
@@ -42,8 +42,8 @@ def test_rebuild_subcommand_forces_single_item(capsys):
     with patch("zotron.ocr.cli.load_config", return_value={}), patch("zotron.ocr.cli._make_processor", return_value=proc):
         _run_main(["rebuild", "--item", "7"])
 
-    proc.process_item.assert_called_once_with(7, "Paper", force=True)
-    assert json.loads(capsys.readouterr().out) == {"item_id": 7, "status": "ok"}
+    proc.process_item.assert_called_once_with("7", "Paper", force=True)
+    assert json.loads(capsys.readouterr().out) == {"item_id": "7", "status": "ok"}
 
 
 def test_legacy_collection_flags_still_process_collection(capsys):

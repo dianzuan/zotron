@@ -35,7 +35,7 @@ def _store_path(collection_name: str) -> Path:
     return Path("~/.local/share/zotron/rag").expanduser() / f"{collection_name}.json"
 
 
-def _find_collection_id(rpc: ZoteroRPC, name: str) -> int | None:
+def _find_collection_id(rpc: ZoteroRPC, name: str) -> str | int | None:
     """Search collections.tree recursively for a collection matching *name*."""
     return _find_collection_by_name(rpc, name)
 
@@ -48,7 +48,7 @@ def _get_item_text(rpc: ZoteroRPC, item_id: str) -> str | None:
     try:
         notes = cast(
             list[dict[str, Any]],
-            rpc.call("notes.get", {"parentId": int(item_id)}) or [],
+            rpc.call("notes.get", {"parentId": item_id}) or [],
         )
         for note in notes:
             tags = note.get("tags") or []
@@ -66,7 +66,7 @@ def _get_item_text(rpc: ZoteroRPC, item_id: str) -> str | None:
 
     # Fallback: fulltext
     try:
-        result = rpc.call("attachments.getFulltext", {"id": int(item_id)})
+        result = rpc.call("attachments.getFulltext", {"id": item_id})
         if isinstance(result, str) and result.strip():
             return result
         if isinstance(result, dict):
@@ -343,7 +343,7 @@ def cmd_index_artifacts(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
     }, ensure_ascii=False))
 
 
-def _item_key_from_info(item_id: int, item_info: dict[str, Any], chunks: list[dict[str, Any]]) -> str:
+def _item_key_from_info(item_id: str | int, item_info: dict[str, Any], chunks: list[dict[str, Any]]) -> str:
     if chunks:
         first_key = chunks[0].get("item_key")
         if first_key:
@@ -361,7 +361,7 @@ def _attachment_path(rpc: ZoteroRPC, attachment: dict[str, Any]) -> Path:
     return Path(linux_path(str(path))).expanduser()
 
 
-def _find_chunks_attachment(rpc: ZoteroRPC, item_id: int) -> dict[str, Any] | None:
+def _find_chunks_attachment(rpc: ZoteroRPC, item_id: str | int) -> dict[str, Any] | None:
     attachments = cast(list[dict[str, Any]], rpc.call("attachments.list", {"parentId": item_id}) or [])
     return _find_chunks_attachment_in(attachments)
 
@@ -391,7 +391,7 @@ def _zotero_item_ids_for_index(rpc: ZoteroRPC, args: argparse.Namespace) -> list
 def _index_zotero_item_artifact(
     *,
     rpc: ZoteroRPC,
-    item_id: int,
+    item_id: str | int,
     embedder: Any,
     model: str,
     output_dir: Path | None,

@@ -61,7 +61,7 @@ def emit_or_die(data, *, output: str = "json", jq_filter: str | None = None) -> 
         die("INVALID_JQ", str(e))
 
 
-def resolve_or_die(rpc: ZoteroRPC, name_or_id: str) -> int:
+def resolve_or_die(rpc: ZoteroRPC, name_or_id: str) -> str | int:
     try:
         return resolve_collection(rpc, name_or_id)
     except CollectionAmbiguous as e:
