@@ -47,6 +47,14 @@ Use `--operator or` to match any condition (default is `and`).
 zotron search by-tag "核心期刊" --limit 20
 ```
 
+## Search by identifier (DOI / ISBN / ISSN)
+
+```bash
+zotron search by-identifier --doi 10.1038/nature12373
+zotron search by-identifier --isbn 9780262035613
+zotron search by-identifier --issn 0028-0836
+```
+
 ## Saved searches
 
 ```bash
@@ -69,14 +77,20 @@ After finding a paper, use its ID or 8-char key directly:
 zotron items get 12345
 zotron items get YR5BUGHG
 
-# PDF full text — auto-finds the PDF attachment
-zotron items fulltext 12345
+# Get fulltext from an item (auto-finds the PDF attachment)
+zotron items fulltext YR5BUGHG
+
+# Or get fulltext directly from a specific attachment
+zotron attachments fulltext ATT_KEY
+
+# Get attachment metadata (contentType, path, linkMode)
+zotron attachments get ATT_KEY
+
+# Get the local file path of an attachment
+zotron attachments path ATT_KEY
 
 # List attachments
 zotron attachments list --parent 12345
-
-# Get attachment file path
-zotron attachments path <attachment-id>
 
 # Notes (includes OCR markdown when OCR'd — filter for "ocr" tag)
 zotron notes list --parent YR5BUGHG
@@ -88,7 +102,19 @@ zotron notes get <note-id>
 zotron annotations list --parent YR5BUGHG
 ```
 
+Zotero automatically indexes PDFs. `items fulltext` finds the first PDF attachment and returns its cached text — no OCR needed for most papers. Use `zotron-ocr` only for scanned PDFs or when fulltext is empty/garbled.
+
 For searching relevant passages across a collection (not full text), see [rag.md](rag.md).
+
+## Annotations
+
+```bash
+# List annotations on a PDF attachment
+zotron annotations list --parent ATT_KEY
+
+# Create a highlight annotation
+zotron annotations create --parent ATT_KEY --type highlight --text "selected text" --color "#FFD400"
+```
 
 ## Browse collections
 

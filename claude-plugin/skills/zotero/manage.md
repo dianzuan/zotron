@@ -118,6 +118,22 @@ zotron items find-duplicates
 zotron items merge-duplicates 10 25
 ```
 
+## Attachments
+
+```bash
+# Add a local file as attachment
+zotron attachments add --parent YR5BUGHG /path/to/paper.pdf
+
+# Add a remote URL as attachment
+zotron attachments add-by-url --parent YR5BUGHG --url https://example.com/paper.pdf
+
+# Auto-find and attach PDF from online sources
+zotron attachments find-pdf --parent YR5BUGHG
+
+# Delete an attachment
+zotron attachments delete ATT_KEY
+```
+
 ## Notes
 
 ```bash
@@ -135,6 +151,26 @@ zotron notes delete <note-id>
 
 # Search notes
 zotron notes search "量化分析" --limit 20
+```
+
+## Batch PDF fill
+
+```bash
+# Find and attach PDFs for all items missing one in a collection
+zotron find-pdfs --collection "数字经济" --limit 20
+```
+
+## Push prepared items
+
+```bash
+# Push a JSON file of items to Zotero
+zotron push items.json --collection "数字经济"
+
+# Push from stdin
+cat items.json | zotron push - --collection "数字经济"
+
+# Dry run — show what would be sent
+zotron push items.json --dry-run
 ```
 
 ## After adding

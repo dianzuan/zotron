@@ -72,6 +72,14 @@ For a real fixture matching this contract, see:
 fixtures/academic_zh_hits.jsonl
 ```
 
+## Cite — retrieve with full citation provenance
+
+```bash
+zotron-rag cite "how do transformers attend to long-range context?" --collection "ML Papers" --output json
+```
+
+Returns JSON array of `Citation` objects with item key, attachment key, section heading, chunk text, similarity score, and `zotero://` URI.
+
 ## Index management
 
 ```bash

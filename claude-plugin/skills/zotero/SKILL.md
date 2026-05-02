@@ -32,9 +32,10 @@ zotron <namespace> <verb> [args] [--flags]
 **Typed subcommands** cover all operations — always prefer these over raw RPC:
 
 ```bash
+zotron ping                        # check connectivity
 zotron search quick "数字经济" --limit 10
-zotron items get 12345
-zotron items fulltext 12345
+zotron items get YR5BUGHG
+zotron items fulltext YR5BUGHG
 zotron notes list --parent 12345
 zotron attachments list --parent 12345
 zotron annotations list --parent 12345

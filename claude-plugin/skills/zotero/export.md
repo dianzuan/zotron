@@ -50,6 +50,12 @@ Look up a paper's Better-BibTeX citation key for LaTeX `\cite{}`:
 zotron items citation-key 10
 ```
 
+## CSV (via RPC)
+
+```bash
+zotron rpc export.csv '{"ids":["YR5BUGHG","ABC12345"]}'
+```
+
 ## Present to user
 
 Output references as a numbered list:

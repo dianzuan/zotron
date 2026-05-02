@@ -2,6 +2,19 @@
 
 Convert PDFs in a Zotero collection to high-quality Markdown via cloud OCR, stored as Zotero Notes. Always run OCR before building a RAG index.
 
+## When to use OCR
+
+Before running OCR, check if Zotero's built-in text extraction is sufficient:
+
+```bash
+zotron items fulltext YR5BUGHG
+```
+
+If the content is non-empty and readable, **skip OCR**. OCR is needed when:
+- The fulltext is empty (scanned PDF with no text layer)
+- The fulltext is garbled (common with Chinese/CJK PDFs)
+- You need structured blocks/chunks for RAG (OCR provides richer provenance)
+
 ## Core usage
 
 ```bash
@@ -32,6 +45,12 @@ export OCR_PROVIDER=glm
 export OCR_API_KEY=your-key
 ```
 Or config file: `~/.config/zotron/config.json`
+
+## Rebuild artifacts for a single item
+
+```bash
+zotron-ocr rebuild --item YR5BUGHG
+```
 
 ## Output
 
