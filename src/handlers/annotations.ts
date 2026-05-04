@@ -7,8 +7,8 @@ import { requireItem } from "../utils/guards";
 import { validateAnnotationParams } from "../utils/annotation";
 
 export const annotationsHandlers = {
-  async list(params: { parentId: number | string }) {
-    const item = await requireItem(params.parentId);
+  async list(params: { parentKey: number | string }) {
+    const item = await requireItem(params.parentKey);
     const annIDs: number[] = (item as any).getAnnotations?.() ?? [];
     if (annIDs.length === 0) return [];
     const anns = (await Zotero.Items.getAsync(annIDs)) as any[];
@@ -24,14 +24,14 @@ export const annotationsHandlers = {
   },
 
   async create(params: {
-    parentId: number | string;
+    parentKey: number | string;
     type: string;
     text?: string;
     comment?: string;
     color?: string;
     position: any;
   }) {
-    const parent = await requireItem(params.parentId);
+    const parent = await requireItem(params.parentKey);
     const validation = validateAnnotationParams({
       type: params.type as any,
       text: params.text,
@@ -53,8 +53,8 @@ export const annotationsHandlers = {
     return { ok: true, key: ann.key };
   },
 
-  async delete(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async delete(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     await item.eraseTx();
     return { ok: true, key: item.key };
   },

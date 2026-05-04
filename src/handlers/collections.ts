@@ -29,13 +29,13 @@ export const collectionsHandlers = {
     return cols.map(serializeCollection);
   },
 
-  async get(params: { id: number | string }) {
-    const col = await requireCollection(params.id);
+  async get(params: { key: number | string }) {
+    const col = await requireCollection(params.key);
     return serializeCollection(col);
   },
 
-  async getItems(params: { id: number | string; limit?: number; offset?: number }) {
-    const col = await requireCollection(params.id);
+  async getItems(params: { key: number | string; limit?: number; offset?: number }) {
+    const col = await requireCollection(params.key);
     const allItems = col.getChildItems(false) || [];
     const offset = params.offset ?? 0;
     const sliced = params.limit !== undefined
@@ -50,8 +50,8 @@ export const collectionsHandlers = {
     return result;
   },
 
-  async getSubcollections(params: { id: number | string }) {
-    const col = await requireCollection(params.id);
+  async getSubcollections(params: { key: number | string }) {
+    const col = await requireCollection(params.key);
     const children = col.getChildCollections(false);
     return children.map(serializeCollection);
   },
@@ -62,38 +62,38 @@ export const collectionsHandlers = {
     return buildTree(cols);
   },
 
-  async create(params: { name: string; parentId?: number }) {
+  async create(params: { name: string; parentKey?: number }) {
     const col = new Zotero.Collection();
     (col as any).libraryID = Zotero.Libraries.userLibraryID;
     col.name = params.name;
-    if (params.parentId) col.parentID = params.parentId;
+    if (params.parentKey) col.parentID = params.parentKey;
     await col.saveTx();
     return serializeCollection(col);
   },
 
-  async rename(params: { id: number | string; name: string }) {
-    const col = await requireCollection(params.id);
+  async rename(params: { key: number | string; name: string }) {
+    const col = await requireCollection(params.key);
     col.name = params.name;
     await col.saveTx();
     return serializeCollection(col);
   },
 
-  async delete(params: { id: number | string }) {
-    const col = await requireCollection(params.id);
+  async delete(params: { key: number | string }) {
+    const col = await requireCollection(params.key);
     await col.eraseTx();
     return { ok: true, key: col.key };
   },
 
-  async move(params: { id: number | string; newParentId: number | null }) {
-    const col = await requireCollection(params.id);
-    (col as any).parentID = params.newParentId || false;
+  async move(params: { key: number | string; newParentKey: number | null }) {
+    const col = await requireCollection(params.key);
+    (col as any).parentID = params.newParentKey || false;
     await col.saveTx();
     return serializeCollection(col);
   },
 
-  async addItems(params: { id: number | string; itemIds: (number | string)[] }) {
-    const col = await requireCollection(params.id);
-    const items = await resolveItems(params.itemIds);
+  async addItems(params: { key: number | string; keys: (number | string)[] }) {
+    const col = await requireCollection(params.key);
+    const items = await resolveItems(params.keys);
     const numericIds = items.map(i => i.id);
     await Zotero.DB.executeTransaction(async () => {
       await col.addItems(numericIds);
@@ -101,9 +101,9 @@ export const collectionsHandlers = {
     return { ok: true, key: col.key, count: numericIds.length };
   },
 
-  async removeItems(params: { id: number | string; itemIds: (number | string)[] }) {
-    const col = await requireCollection(params.id);
-    const items = await resolveItems(params.itemIds);
+  async removeItems(params: { key: number | string; keys: (number | string)[] }) {
+    const col = await requireCollection(params.key);
+    const items = await resolveItems(params.keys);
     const numericIds = items.map(i => i.id);
     await Zotero.DB.executeTransaction(async () => {
       await col.removeItems(numericIds);
@@ -111,8 +111,8 @@ export const collectionsHandlers = {
     return { ok: true, key: col.key, count: numericIds.length };
   },
 
-  async stats(params: { id: number | string }) {
-    const col = await requireCollection(params.id);
+  async stats(params: { key: number | string }) {
+    const col = await requireCollection(params.key);
     const items = col.getChildItems(false);
     const subcols = col.getChildCollections(false);
     return {

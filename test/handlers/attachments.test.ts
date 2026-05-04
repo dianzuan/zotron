@@ -27,7 +27,7 @@ describe("attachments handler", () => {
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
-      const result = await attachmentsHandlers.getFulltext({ id: 42 });
+      const result = await attachmentsHandlers.getFulltext({ key: 42 });
 
       expect(getCacheFileStub.calledWith(item)).to.equal(true);
       expect(getContentsAsyncStub.calledWith(cacheFile.path)).to.equal(true);
@@ -57,7 +57,7 @@ describe("attachments handler", () => {
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
-      const result = await attachmentsHandlers.getFulltext({ id: 99 });
+      const result = await attachmentsHandlers.getFulltext({ key: 99 });
       expect(result).to.deep.equal({
         key: "KEY99",
         content: "",
@@ -76,7 +76,7 @@ describe("attachments handler", () => {
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
       try {
-        await attachmentsHandlers.getFulltext({ id: 5 });
+        await attachmentsHandlers.getFulltext({ key: 5 });
         expect.fail("should have thrown");
       } catch (e: any) {
         expect(e.code).to.equal(-32602);
@@ -116,7 +116,7 @@ describe("attachments handler", () => {
 
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
-      const result = await attachmentsHandlers.list({ parentId: 1 });
+      const result = await attachmentsHandlers.list({ parentKey: 1 });
 
       expect(result).to.have.lengthOf(2);
       // serializeItem-shape — has the standard envelope keys
@@ -153,7 +153,7 @@ describe("attachments handler", () => {
       });
 
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
-      const result = await attachmentsHandlers.findPDF({ parentId: 1 });
+      const result = await attachmentsHandlers.findPDF({ parentKey: 1 });
 
       expect(result).to.have.property("attachment");
       expect(result.attachment).to.not.be.null;
@@ -170,7 +170,7 @@ describe("attachments handler", () => {
       });
 
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
-      const result = await attachmentsHandlers.findPDF({ parentId: 1 });
+      const result = await attachmentsHandlers.findPDF({ parentKey: 1 });
 
       expect(result).to.deep.equal({ attachment: null });
     });
@@ -221,7 +221,7 @@ describe("attachments handler", () => {
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
-      await attachmentsHandlers.add({ parentId: 1, path: fakeFile.path, title: "Full Text PDF" });
+      await attachmentsHandlers.add({ parentKey: 1, path: fakeFile.path, title: "Full Text PDF" });
 
       expect(getFileBaseNameFromItem.calledOnceWith(parent)).to.equal(true);
       expect(renameAttachmentFile.calledOnce).to.equal(true);
@@ -240,7 +240,7 @@ describe("attachments handler", () => {
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
       await attachmentsHandlers.add({
-        parentId: 1, path: fakeFile.path, title: "Full Text PDF", renameFromParent: false,
+        parentKey: 1, path: fakeFile.path, title: "Full Text PDF", renameFromParent: false,
       });
 
       expect(getFileBaseNameFromItem.called).to.equal(false);
@@ -255,7 +255,7 @@ describe("attachments handler", () => {
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
-      await attachmentsHandlers.add({ parentId: 1, path: fakeFile.path });
+      await attachmentsHandlers.add({ parentKey: 1, path: fakeFile.path });
 
       expect(getFileBaseNameFromItem.calledOnce).to.equal(true);
       expect(renameAttachmentFile.called).to.equal(false);
@@ -288,7 +288,7 @@ describe("attachments handler", () => {
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
-      const result = await attachmentsHandlers.add({ parentId: 1, path: fakeFile.path });
+      const result = await attachmentsHandlers.add({ parentKey: 1, path: fakeFile.path });
       expect(result.key).to.equal("A7");
     });
 
@@ -301,7 +301,7 @@ describe("attachments handler", () => {
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
 
-      await attachmentsHandlers.add({ parentId: 1, path: fakeFile.path });
+      await attachmentsHandlers.add({ parentKey: 1, path: fakeFile.path });
 
       expect(renameAttachmentFile.firstCall.args[0]).to.equal("Some Title");
     });
@@ -325,7 +325,7 @@ describe("attachments handler", () => {
       });
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
-      const result = await attachmentsHandlers.get({ id: 50 });
+      const result = await attachmentsHandlers.get({ key: 50 });
       expect(result.key).to.equal("ATT50");
       expect(result.contentType).to.equal("application/pdf");
       expect(result.path).to.equal("/path/to/file.pdf");
@@ -341,7 +341,7 @@ describe("attachments handler", () => {
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
       try {
-        await attachmentsHandlers.get({ id: 99 });
+        await attachmentsHandlers.get({ key: 99 });
         expect.fail("should have thrown");
       } catch (e: any) {
         expect(e.code).to.equal(-32602);
@@ -359,7 +359,7 @@ describe("attachments handler", () => {
 
       delete require.cache[require.resolve("../../src/handlers/attachments")];
       const { attachmentsHandlers } = await import("../../src/handlers/attachments");
-      const result = await attachmentsHandlers.delete({ id: 44 });
+      const result = await attachmentsHandlers.delete({ key: 44 });
 
       expect(result).to.deep.equal({ ok: true, key: "KEY44" });
       expect(eraseTx.calledOnce).to.equal(true);

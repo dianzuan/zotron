@@ -103,9 +103,9 @@ export const searchHandlers = {
     return { ok: true, key: s.key, name: s.name };
   },
 
-  async deleteSavedSearch(params: { id: number }) {
-    const s = await Zotero.Searches.getAsync(params.id);
-    if (!s) throw { code: -32602, message: `Saved search ${params.id} not found` };
+  async deleteSavedSearch(params: { key: number }) {
+    const s = await Zotero.Searches.getAsync(params.key);
+    if (!s) throw { code: -32602, message: `Saved search ${params.key} not found` };
     const key = (s as any).key;
     await s.eraseTx();
     return { ok: true, key };

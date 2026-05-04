@@ -52,7 +52,7 @@ describe("annotations handler", () => {
       });
 
       const { annotationsHandlers } = await import("../../src/handlers/annotations");
-      const result = await annotationsHandlers.list({ parentId: 1 });
+      const result = await annotationsHandlers.list({ parentKey: 1 });
 
       expect(result).to.have.lengthOf(2);
       expect(result[0].annotationType).to.equal("highlight");
@@ -71,7 +71,7 @@ describe("annotations handler", () => {
       });
 
       const { annotationsHandlers } = await import("../../src/handlers/annotations");
-      const result = await annotationsHandlers.list({ parentId: 2 });
+      const result = await annotationsHandlers.list({ parentKey: 2 });
 
       expect(result).to.deep.equal([]);
     });
@@ -102,7 +102,7 @@ describe("annotations handler", () => {
 
       const { annotationsHandlers } = await import("../../src/handlers/annotations");
       const result = await annotationsHandlers.create({
-        parentId: 5,
+        parentKey: 5,
         type: "highlight",
         text: "selected text",
         comment: "my note",
@@ -133,7 +133,7 @@ describe("annotations handler", () => {
       const { annotationsHandlers } = await import("../../src/handlers/annotations");
       try {
         await annotationsHandlers.create({
-          parentId: 5,
+          parentKey: 5,
           type: "invalid_type",
           position: {},
         });
@@ -154,7 +154,7 @@ describe("annotations handler", () => {
       });
 
       const { annotationsHandlers } = await import("../../src/handlers/annotations");
-      const result = await annotationsHandlers.delete({ id: 77 });
+      const result = await annotationsHandlers.delete({ key: 77 });
 
       expect(result).to.deep.equal({ ok: true, key: "ANN77" });
       expect(eraseTxStub.calledOnce).to.equal(true);

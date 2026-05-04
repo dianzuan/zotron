@@ -81,7 +81,7 @@ describe("collections handler", () => {
       const { collectionsHandlers } = await import("../../src/handlers/collections");
 
       try {
-        await collectionsHandlers.removeItems({ id: 999, itemIds: [1, 2] });
+        await collectionsHandlers.removeItems({ key: 999, keys: [1, 2] });
         expect.fail("should have thrown");
       } catch (e: any) {
         expect(e.code).to.equal(-32602);
@@ -109,7 +109,7 @@ describe("collections handler", () => {
       });
 
       const { collectionsHandlers } = await import("../../src/handlers/collections");
-      const result = await collectionsHandlers.getItems({ id: 1, limit: 10, offset: 5 });
+      const result = await collectionsHandlers.getItems({ key: 1, limit: 10, offset: 5 });
 
       expect(result).to.have.property("limit", 10);
       expect(result).to.have.property("offset", 5);
@@ -129,7 +129,7 @@ describe("collections handler", () => {
         CreatorTypes: { getName: () => "author" },
       });
       const { collectionsHandlers } = await import("../../src/handlers/collections");
-      const result = await collectionsHandlers.getItems({ id: 2 });
+      const result = await collectionsHandlers.getItems({ key: 2 });
       expect(result).to.have.property("total", 0);
       expect(result).to.have.property("items").that.deep.equals([]);
       expect(result).to.not.have.property("limit");
@@ -157,7 +157,7 @@ describe("collections handler", () => {
       delete require.cache[require.resolve("../../src/utils/guards")];
       delete require.cache[require.resolve("../../src/handlers/collections")];
       const { collectionsHandlers } = await import("../../src/handlers/collections");
-      const result = await collectionsHandlers.addItems({ id: 1, itemIds: [10, 20, 30] });
+      const result = await collectionsHandlers.addItems({ key: 1, keys: [10, 20, 30] });
       expect(executeTransactionStub.calledOnce).to.equal(true);
       expect(colAddItemsStub.calledOnceWith([10, 20, 30])).to.equal(true);
       expect(result).to.have.property("count");
@@ -186,7 +186,7 @@ describe("collections handler", () => {
       delete require.cache[require.resolve("../../src/utils/guards")];
       delete require.cache[require.resolve("../../src/handlers/collections")];
       const { collectionsHandlers } = await import("../../src/handlers/collections");
-      const result = await collectionsHandlers.removeItems({ id: 1, itemIds: [10, 20, 30] });
+      const result = await collectionsHandlers.removeItems({ key: 1, keys: [10, 20, 30] });
       expect(executeTransactionStub.calledOnce).to.equal(true);
       expect(colRemoveItemsStub.calledOnceWith([10, 20, 30])).to.equal(true);
       expect(result).to.have.property("count");

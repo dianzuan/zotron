@@ -6,22 +6,22 @@ import { serializeItem } from "../utils/serialize";
 import { requireItem } from "../utils/guards";
 
 export const notesHandlers = {
-  async get(params: { id: number | string }) {
-    const note = await requireItem(params.id);
-    if (!note.isNote()) throw { code: -32602, message: `Item ${params.id} is not a note` };
+  async get(params: { key: number | string }) {
+    const note = await requireItem(params.key);
+    if (!note.isNote()) throw { code: -32602, message: `Item ${params.key} is not a note` };
     return serializeItem(note);
   },
 
-  async list(params: { parentId: number | string }) {
-    const parent = await requireItem(params.parentId);
+  async list(params: { parentKey: number | string }) {
+    const parent = await requireItem(params.parentKey);
     const noteIDs = parent.getNotes();
     if (noteIDs.length === 0) return [];
     const notes = await Zotero.Items.getAsync(noteIDs);
     return notes.map(serializeItem);
   },
 
-  async create(params: { parentId: number | string; content: string; tags?: string[] }) {
-    const parent = await requireItem(params.parentId);
+  async create(params: { parentKey: number | string; content: string; tags?: string[] }) {
+    const parent = await requireItem(params.parentKey);
     const note = new Zotero.Item("note");
     note.libraryID = parent.libraryID;
     note.parentID = parent.id;
@@ -33,9 +33,9 @@ export const notesHandlers = {
     return { ok: true, key: note.key };
   },
 
-  async update(params: { id: number | string; content: string }) {
-    const note = await requireItem(params.id);
-    if (!note.isNote()) throw { code: -32602, message: `Note ${params.id} not found` };
+  async update(params: { key: number | string; content: string }) {
+    const note = await requireItem(params.key);
+    if (!note.isNote()) throw { code: -32602, message: `Note ${params.key} not found` };
     note.setNote(params.content);
     await note.saveTx();
     return serializeItem(note);

@@ -28,27 +28,27 @@ const TRANSLATORS = {
 };
 
 export const exportHandlers = {
-  async bibtex(params: { ids: (number | string)[] }) {
-    const output = await exportItems(params.ids, TRANSLATORS.bibtex, "bibtex");
-    return { format: "bibtex", content: output, count: params.ids.length };
+  async bibtex(params: { keys: (number | string)[] }) {
+    const output = await exportItems(params.keys, TRANSLATORS.bibtex, "bibtex");
+    return { format: "bibtex", content: output, count: params.keys.length };
   },
 
-  async cslJson(params: { ids: (number | string)[] }) {
-    const output = await exportItems(params.ids, TRANSLATORS.cslJson, "cslJson");
-    return { format: "csl-json", content: JSON.parse(output), count: params.ids.length };
+  async cslJson(params: { keys: (number | string)[] }) {
+    const output = await exportItems(params.keys, TRANSLATORS.cslJson, "cslJson");
+    return { format: "csl-json", content: JSON.parse(output), count: params.keys.length };
   },
 
-  async ris(params: { ids: (number | string)[] }) {
-    const output = await exportItems(params.ids, TRANSLATORS.ris, "ris");
-    return { format: "ris", content: output, count: params.ids.length };
+  async ris(params: { keys: (number | string)[] }) {
+    const output = await exportItems(params.keys, TRANSLATORS.ris, "ris");
+    return { format: "ris", content: output, count: params.keys.length };
   },
 
-  async csv(params: { ids: (number | string)[]; fields?: string[] }) {
-    const output = await exportItems(params.ids, TRANSLATORS.csv, "csv");
-    return { format: "csv", content: output, count: params.ids.length };
+  async csv(params: { keys: (number | string)[]; fields?: string[] }) {
+    const output = await exportItems(params.keys, TRANSLATORS.csv, "csv");
+    return { format: "csv", content: output, count: params.keys.length };
   },
 
-  async bibliography(params: { ids: (number | string)[]; style?: string }) {
+  async bibliography(params: { keys: (number | string)[]; style?: string }) {
     // We bypass Zotero.QuickCopy.getContentFromItems because in Zotero 8 its
     // internal path ended up calling style.getCiteProc on an object that
     // didn't have the method, surfacing as -32603. Going through
@@ -63,7 +63,7 @@ export const exportHandlers = {
                  `Install via Zotero → Settings → Cite → Styles.`,
       };
     }
-    const itemIDs = params.ids;
+    const itemIDs = params.keys;
     const engine = style.getCiteProc();
     const formats: { html: string; text: string } = { html: "", text: "" };
     try {

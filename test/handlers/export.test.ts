@@ -39,7 +39,7 @@ describe("export handler", () => {
       const { exportHandlers } = await import("../../src/handlers/export");
 
       try {
-        await exportHandlers.bibtex({ ids: [1] });
+        await exportHandlers.bibtex({ keys: [1] });
         expect.fail("should have thrown");
       } catch (e: any) {
         expect(e.code).to.equal(-32603);

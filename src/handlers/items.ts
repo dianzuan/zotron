@@ -23,8 +23,8 @@ function autoSplitCreator(c: { firstName: string; lastName: string; creatorType:
 }
 
 export const itemsHandlers = {
-  async get(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async get(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     return serializeItem(item);
   },
 
@@ -71,12 +71,12 @@ export const itemsHandlers = {
   },
 
   async update(params: {
-    id: number | string;
+    key: number | string;
     fields?: Record<string, string>;
     creators?: Array<{ firstName: string; lastName: string; creatorType: string }>;
     tags?: string[];
   }) {
-    const item = await requireItem(params.id);
+    const item = await requireItem(params.key);
 
     if (params.fields) {
       for (const [field, value] of Object.entries(params.fields)) {
@@ -113,21 +113,21 @@ export const itemsHandlers = {
     return serializeItem(item);
   },
 
-  async delete(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async delete(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     await item.eraseTx();
     return { ok: true, key: item.key };
   },
 
-  async trash(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async trash(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     item.deleted = true;
     await item.saveTx();
     return { ok: true, key: item.key };
   },
 
-  async restore(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async restore(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     item.deleted = false;
     await item.saveTx();
     return { ok: true, key: item.key };
@@ -143,8 +143,8 @@ export const itemsHandlers = {
     return { items: items.map(serializeItem), total: trashedIDs.length, limit, offset };
   },
 
-  async batchTrash(params: { ids: (number | string)[] }) {
-    const items = await resolveItems(params.ids);
+  async batchTrash(params: { keys: (number | string)[] }) {
+    const items = await resolveItems(params.keys);
     const keys: string[] = [];
     for (const item of items) {
       item.deleted = true;
@@ -267,11 +267,11 @@ export const itemsHandlers = {
     return { groups: keyGroups, totalGroups: keyGroups.length };
   },
 
-  async mergeDuplicates(params: { ids: (number | string)[] }) {
-    if (params.ids.length < 2) {
+  async mergeDuplicates(params: { keys: (number | string)[] }) {
+    if (params.keys.length < 2) {
       throw { code: -32602, message: "Need at least 2 item IDs to merge" };
     }
-    const items = await resolveItems(params.ids);
+    const items = await resolveItems(params.keys);
     const master = items[0];
     for (let i = 1; i < items.length; i++) {
       await Zotero.Items.merge(master, [items[i]]);
@@ -279,8 +279,8 @@ export const itemsHandlers = {
     return serializeItem(master);
   },
 
-  async getRelated(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async getRelated(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     const relatedKeys = item.relatedItems;
     const related = [];
     for (const key of relatedKeys) {
@@ -290,9 +290,9 @@ export const itemsHandlers = {
     return related;
   },
 
-  async addRelated(params: { id: number | string; relatedId: number | string }) {
-    const item = await requireItem(params.id);
-    const related = await requireItem(params.relatedId);
+  async addRelated(params: { key: number | string; relatedKey: number | string }) {
+    const item = await requireItem(params.key);
+    const related = await requireItem(params.relatedKey);
     item.addRelatedItem(related);
     await item.saveTx();
     related.addRelatedItem(item);
@@ -300,9 +300,9 @@ export const itemsHandlers = {
     return { ok: true, key: item.key };
   },
 
-  async removeRelated(params: { id: number | string; relatedId: number | string }) {
-    const item = await requireItem(params.id);
-    const related = await requireItem(params.relatedId);
+  async removeRelated(params: { key: number | string; relatedKey: number | string }) {
+    const item = await requireItem(params.key);
+    const related = await requireItem(params.relatedKey);
     item.removeRelatedItem(related);
     await item.saveTx();
     related.removeRelatedItem(item);
@@ -332,8 +332,8 @@ export const itemsHandlers = {
     };
   },
 
-  async getFullText(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async getFullText(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     const attIDs = item.getAttachments ? item.getAttachments() : [];
     for (const attID of attIDs) {
       const att = await Zotero.Items.getAsync(attID);
@@ -359,8 +359,8 @@ export const itemsHandlers = {
     return { key: item.key, content: "", indexedChars: 0, totalChars: 0 };
   },
 
-  async citationKey(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async citationKey(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     // Try Better BibTeX citation key if available
     const extra = item.getField("extra") as string;
     const match = extra?.match(/Citation Key:\s*(\S+)/i);

@@ -109,7 +109,7 @@ describe("items handler", () => {
       delete require.cache[require.resolve("../../src/utils/guards")];
       const { itemsHandlers } = await import("../../src/handlers/items");
 
-      const result = await itemsHandlers.batchTrash({ ids: [1, 2, 3] });
+      const result = await itemsHandlers.batchTrash({ keys: [1, 2, 3] });
       expect(result.ok).to.equal(true);
       expect(result.count).to.equal(3);
       expect(result.keys).to.have.lengthOf(3);
@@ -162,7 +162,7 @@ describe("items handler", () => {
       installZotero({ Items: { getAsync: getAsyncStub } });
 
       const { itemsHandlers } = await import("../../src/handlers/items");
-      const result = await itemsHandlers.addRelated({ id: 10, relatedId: 20 });
+      const result = await itemsHandlers.addRelated({ key: 10, relatedKey: 20 });
       expect(result).to.have.property("key", "S");
       expect(result.ok).to.equal(true);
     });
@@ -180,7 +180,7 @@ describe("items handler", () => {
       installZotero({ Items: { getAsync: getAsyncStub } });
 
       const { itemsHandlers } = await import("../../src/handlers/items");
-      const result = await itemsHandlers.removeRelated({ id: 10, relatedId: 20 });
+      const result = await itemsHandlers.removeRelated({ key: 10, relatedKey: 20 });
       expect(result).to.have.property("key", "S");
       expect(result.ok).to.equal(true);
     });
@@ -409,7 +409,7 @@ describe("items handler", () => {
       delete require.cache[require.resolve("../../src/handlers/items")];
       delete require.cache[require.resolve("../../src/utils/guards")];
       const { itemsHandlers } = await import("../../src/handlers/items");
-      const result = await itemsHandlers.batchTrash({ ids: ["KEY00001", "KEY00002"] });
+      const result = await itemsHandlers.batchTrash({ keys: ["KEY00001", "KEY00002"] });
       expect(result.ok).to.equal(true);
       expect(result.count).to.equal(2);
       expect(result.keys).to.deep.equal(["KEY00001", "KEY00002"]);
@@ -495,7 +495,7 @@ describe("items handler", () => {
       });
 
       const { itemsHandlers } = await import("../../src/handlers/items");
-      const result = await itemsHandlers.getFullText({ id: 10 });
+      const result = await itemsHandlers.getFullText({ key: 10 });
 
       expect(result.key).to.equal("PDF20");
       expect(result.content).to.equal("Full text content here");
@@ -513,7 +513,7 @@ describe("items handler", () => {
       });
 
       const { itemsHandlers } = await import("../../src/handlers/items");
-      const result = await itemsHandlers.getFullText({ id: 30 });
+      const result = await itemsHandlers.getFullText({ key: 30 });
 
       expect(result.key).to.equal("NOATT");
       expect(result.content).to.equal("");
@@ -542,7 +542,7 @@ describe("items handler", () => {
       });
 
       const { itemsHandlers } = await import("../../src/handlers/items");
-      const result = await itemsHandlers.citationKey({ id: 5 });
+      const result = await itemsHandlers.citationKey({ key: 5 });
 
       expect(result).to.have.property("key", "K5");
       expect(result).to.have.property("citationKey");

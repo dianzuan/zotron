@@ -23,23 +23,23 @@ async function serializeAttachment(item: Zotero.Item): Promise<Record<string, an
 }
 
 export const attachmentsHandlers = {
-  async get(params: { id: number | string }) {
-    const item = await requireItem(params.id);
-    if (!item.isAttachment()) throw { code: -32602, message: `Item ${params.id} is not an attachment` };
+  async get(params: { key: number | string }) {
+    const item = await requireItem(params.key);
+    if (!item.isAttachment()) throw { code: -32602, message: `Item ${params.key} is not an attachment` };
     return serializeAttachment(item);
   },
 
-  async list(params: { parentId: number | string }) {
-    const parent = await requireItem(params.parentId);
+  async list(params: { parentKey: number | string }) {
+    const parent = await requireItem(params.parentKey);
     const attIDs = parent.getAttachments();
     if (attIDs.length === 0) return [];
     const atts = await Zotero.Items.getAsync(attIDs);
     return Promise.all(atts.map(serializeAttachment));
   },
 
-  async getFulltext(params: { id: number | string }) {
-    const item = await requireItem(params.id);
-    if (!item.isAttachment()) throw { code: -32602, message: `Not an attachment: ${params.id}` };
+  async getFulltext(params: { key: number | string }) {
+    const item = await requireItem(params.key);
+    if (!item.isAttachment()) throw { code: -32602, message: `Not an attachment: ${params.key}` };
 
     // Zotero 8 has no Zotero.Fulltext.getItemContent — read the cache file and
     // pull chars from the fulltextItems SQL row (anchored at fulltext.js#L672+L692).
@@ -68,12 +68,12 @@ export const attachmentsHandlers = {
   },
 
   async add(params: {
-    parentId: number | string;
+    parentKey: number | string;
     path: string;
     title?: string;
     renameFromParent?: boolean;
   }) {
-    const parent = await requireItem(params.parentId);
+    const parent = await requireItem(params.parentKey);
     const file = Zotero.File.pathToFile(params.path);
     if (!file.exists()) throw { code: -32602, message: `File not found: ${params.path}` };
     const attachment = await Zotero.Attachments.importFromFile({
@@ -105,8 +105,8 @@ export const attachmentsHandlers = {
     return serializeItem(attachment);
   },
 
-  async addByURL(params: { parentId: number | string; url: string; title?: string }) {
-    const parent = await requireItem(params.parentId);
+  async addByURL(params: { parentKey: number | string; url: string; title?: string }) {
+    const parent = await requireItem(params.parentKey);
     const attachment = await Zotero.Attachments.importFromURL({
       url: params.url,
       parentItemID: parent.id,
@@ -115,26 +115,26 @@ export const attachmentsHandlers = {
     return serializeItem(attachment);
   },
 
-  async getPath(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async getPath(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     if (!item.isAttachment()) {
-      throw { code: -32602, message: `Attachment ${params.id} not found` };
+      throw { code: -32602, message: `Attachment ${params.key} not found` };
     }
     const path = await item.getFilePathAsync();
     return { key: item.key, path: path || null };
   },
 
-  async delete(params: { id: number | string }) {
-    const item = await requireItem(params.id);
+  async delete(params: { key: number | string }) {
+    const item = await requireItem(params.key);
     if (!item.isAttachment()) {
-      throw { code: -32602, message: `Attachment ${params.id} not found` };
+      throw { code: -32602, message: `Attachment ${params.key} not found` };
     }
     await item.eraseTx();
     return { ok: true, key: item.key };
   },
 
-  async findPDF(params: { parentId: number | string }) {
-    const parent = await requireItem(params.parentId);
+  async findPDF(params: { parentKey: number | string }) {
+    const parent = await requireItem(params.parentKey);
     const attachment = await Zotero.Attachments.addAvailableFile(parent);
     return { attachment: attachment ? serializeItem(attachment) : null };
   },

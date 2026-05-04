@@ -16,8 +16,8 @@ export const tagsHandlers = {
     }));
   },
 
-  async add(params: { itemId: number; tags: string[] }) {
-    const item = await requireItem(params.itemId);
+  async add(params: { key: number; tags: string[] }) {
+    const item = await requireItem(params.key);
     for (const tag of params.tags) {
       item.addTag(tag);
     }
@@ -25,8 +25,8 @@ export const tagsHandlers = {
     return { ok: true, key: item.key };
   },
 
-  async remove(params: { itemId: number; tags: string[] }) {
-    const item = await requireItem(params.itemId);
+  async remove(params: { key: number; tags: string[] }) {
+    const item = await requireItem(params.key);
     for (const tag of params.tags) {
       item.removeTag(tag);
     }
@@ -49,13 +49,13 @@ export const tagsHandlers = {
   },
 
   async batchUpdate(params: {
-    operations: Array<{ itemId: number | string; add?: string[]; remove?: string[] }>;
+    operations: Array<{ key: number | string; add?: string[]; remove?: string[] }>;
   }) {
     let totalAdded = 0;
     let totalRemoved = 0;
     await Zotero.DB.executeTransaction(async () => {
       for (const op of params.operations) {
-        const item = await requireItem(op.itemId);
+        const item = await requireItem(op.key);
         if (op.add) {
           for (const tag of op.add) { item.addTag(tag); totalAdded++; }
         }

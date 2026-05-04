@@ -27,7 +27,7 @@ describe("notes handler", () => {
       });
 
       const { notesHandlers } = await import("../../src/handlers/notes");
-      const result = await notesHandlers.list({ parentId: 1 });
+      const result = await notesHandlers.list({ parentKey: 1 });
 
       expect(result).to.have.lengthOf(1);
       expect(result[0].key).to.equal("N1");
@@ -56,7 +56,7 @@ describe("notes handler", () => {
       });
       delete require.cache[require.resolve("../../src/handlers/notes")];
       const { notesHandlers } = await import("../../src/handlers/notes");
-      const result = await notesHandlers.get({ id: 100 });
+      const result = await notesHandlers.get({ key: 100 });
       expect(result.key).to.equal("N1");
       expect(result.note).to.equal("<p>Hello</p>");
     });
@@ -71,7 +71,7 @@ describe("notes handler", () => {
       delete require.cache[require.resolve("../../src/handlers/notes")];
       const { notesHandlers } = await import("../../src/handlers/notes");
       try {
-        await notesHandlers.get({ id: 200 });
+        await notesHandlers.get({ key: 200 });
         expect.fail("should have thrown");
       } catch (e: any) {
         expect(e.code).to.equal(-32602);
@@ -137,7 +137,7 @@ describe("notes handler", () => {
       });
 
       const { notesHandlers } = await import("../../src/handlers/notes");
-      const result = await notesHandlers.update({ id: 100, content: "<p>Updated body</p>" });
+      const result = await notesHandlers.update({ key: 100, content: "<p>Updated body</p>" });
 
       expect(result.key).to.equal("N1");
       expect(result.note).to.equal("<p>Updated body</p>");
