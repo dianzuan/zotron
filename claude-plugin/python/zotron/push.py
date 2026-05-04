@@ -133,8 +133,7 @@ def find_duplicate(rpc: Any, item_json: dict) -> int | str | None:
 
     Priority (each step short-circuits on first hit):
       1. DOI   → search.byIdentifier({doi})
-      2. ISSN  → search.byIdentifier({issn})       (XPI ≥0.2)
-      3. Title → search.quick, exact match only (skip if title <10 chars)
+      2. Title → search.quick, exact match only (skip if title <10 chars)
 
     Returns the first matching item ID, or None if not found.
 
@@ -154,14 +153,9 @@ def find_duplicate(rpc: Any, item_json: dict) -> int | str | None:
         hits = _items(rpc.call("search.byIdentifier", {"doi": doi}))
         if hits:
             return hits[0]["key"]
-    issn = item_json.get("ISSN")
-    if issn:
-        hits = _items(rpc.call("search.byIdentifier", {"issn": issn}))
-        if hits:
-            return hits[0]["key"]
     title = item_json.get("title", "")
     if len(title) >= 10:
-        hits = _items(rpc.call("search.quick", {"query": title, "limit": 5}))
+        hits = _items(rpc.call("search.quick", {"query": title, "limit": 20}))
         for h in hits:
             if h.get("title") == title:
                 return h["key"]

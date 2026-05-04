@@ -25,24 +25,18 @@ def test_doi_hit():
     assert find_duplicate(rpc, item) == "ITEM500"
 
 
-def test_doi_miss_issn_hit():
-    calls: list[tuple] = []
-
+def test_doi_miss_title_hit():
     def call(method: str, params: dict | None = None):
-        calls.append((method, params))
-        if method == "search.byIdentifier" and params.get("doi"):
+        if method == "search.byIdentifier":
             return []
-        if method == "search.byIdentifier" and params.get("issn"):
-            return [{"key": "ITEM42"}]
+        if method == "search.quick":
+            return [{"key": "ITEM42", "title": "中国上市公司财务造假预测模型"}]
         return None
 
     rpc = MagicMock()
     rpc.call.side_effect = call
-    item = {"DOI": "10.x/nope", "ISSN": "1234-5678", "title": "X"}
+    item = {"DOI": "10.x/nope", "title": "中国上市公司财务造假预测模型"}
     assert find_duplicate(rpc, item) == "ITEM42"
-    # Verify we call with "issn" key, not "isbn"
-    issn_call = [c for c in calls if c[1] and c[1].get("issn")]
-    assert len(issn_call) == 1
 
 
 def test_title_fallback_exact_match():
