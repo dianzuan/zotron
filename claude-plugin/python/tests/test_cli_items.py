@@ -252,7 +252,7 @@ def test_items_add_from_file_dry_run(mock_rpc, tmp_path):
     data = json.loads(result.stdout)
     assert data["dryRun"] is True
     assert data["wouldCall"] == "items.addFromFile"
-    assert str(pdf) in data["wouldCallParams"]["path"]
+    assert "paper.pdf" in data["wouldCallParams"]["path"]
     mock_rpc.call.assert_not_called()
 
 

@@ -6,6 +6,7 @@ import json
 import typer
 
 from zotron._cli_base import DEFAULT_URL, new_rpc, die, rpc_or_die, dry_run, emit_or_die, resolve_or_die
+from zotron.paths import zotero_path
 
 items_app = typer.Typer(
     help="Add items by DOI/ISBN/URL; inspect; trash; find/merge duplicates.",
@@ -342,7 +343,7 @@ def items_add_from_file(
 ) -> None:
     """Add an item from a local file (e.g. a PDF)."""
     rpc = new_rpc(url)
-    params: dict = {"path": path}
+    params: dict = {"path": zotero_path(path)}
     if collection is not None:
         coll_id = resolve_or_die(rpc, collection)
         if coll_id and coll_id != 0:
